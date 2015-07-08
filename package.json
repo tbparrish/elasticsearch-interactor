@@ -1,0 +1,21 @@
+{
+  "name": "brawler",
+  "private": true,
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=0.10.3"
+  },
+  "description": "Log search, pagination and aggregation service",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha test/"
+  },
+  "author": "rhodri@gmail.com",
+  "devDependencies": {},
+  "dependencies": {
+    "elasticsearch": "^4.1.0",
+    "moment": "^2.10.3",
+    "moment-range": "^1.1.0",
+    "persephone-ms": "0.0.1"
+  }
+}
