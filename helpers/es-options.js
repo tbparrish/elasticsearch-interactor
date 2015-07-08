@@ -44,18 +44,9 @@ function constructSort(sortUrlParam) {
   return sort;
 }
 
-function chunkIndices(indexDates) {
-  var i, chunkSize = 100, chunks = [];
-  for (i = 0; i < indexDates.length; i += chunkSize) {
-    chunks.push(indexDates.slice(i, i + chunkSize));
-  }
-  return chunks;
-}
-
 function constructSearchOptions(query) {
 
-  var indexDates = ['overwatch-*']
-      filters = [],
+  var filters = [],
       from = query.from,
       to = query.to,
       hostname = query.hostname;
@@ -64,8 +55,6 @@ function constructSearchOptions(query) {
 
     var fromMoment = moment(from).utc(),
         toMoment = moment(to).utc();
-
-    indexDates = generateIndexDates(fromMoment, toMoment);
 
     filters.push({
       range: {
@@ -90,7 +79,7 @@ function constructSearchOptions(query) {
       sort = constructSort(query.sort);
 
   var searchOptions = {
-    index: indexDates.join(','),
+    index: 'overwatch-*',
     type: query.type || 'syslog',
     ignore_unavailable: true,
     body: {
