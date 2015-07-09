@@ -1,5 +1,5 @@
 {
-  "name": "brawler",
+  "name": "elasticsearch-interactor",
   "private": true,
   "version": "0.0.1",
   "engines": {
