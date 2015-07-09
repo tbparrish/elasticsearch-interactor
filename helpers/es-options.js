@@ -3,25 +3,6 @@ var moment = require('moment');
 // Add range() function on to moment()
 require('moment-range');
 
-function generateIndexDates(fromMoment, toMoment) {
-
-  var dayFormat = 'YYYY.MM.DD';
-
-  if (toMoment.isBefore(fromMoment)) {
-    var toBeforeFromMessage = "To date is before From date";
-    log.error(toBeforeFromMessage, { from: from, to: to });
-    throw { statusCode: 400, message: toBeforeFromMessage };
-  }
-
-  var indexDates = [];
-  var dayRange = moment().range(fromMoment, toMoment)
-  dayRange.by('days', function (day) {
-    indexDates.push('overwatch-' + day.format(dayFormat));
-  });
-
-  return indexDates;
-}
-
 function constructQuery(filters) {
   return {
     filtered: {
