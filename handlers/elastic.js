@@ -3,11 +3,8 @@ var esClient = require('../helpers/es-client'),
 
 var es = esClient(config.elastic);
 
-on('ElasticOptions', function (query) {
-  return constructOptions(query);
-});
-
-on('ElasticQuery', function (searchOptions) {
+on('ElasticQuery', function (query) {
+  var searchOptions = constructOptions(query);
   return es.search(searchOptions).then(function (results) {
     return results.hits.hits.map(function (hit) { return hit._source; });
   });
