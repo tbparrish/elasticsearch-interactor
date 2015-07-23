@@ -8,7 +8,8 @@
   "description": "Log search, pagination and aggregation service",
   "scripts": {
     "start": "node index.js",
-    "test": "mocha test/"
+    "test": "mocha test/",
+    "build": "exit 0"
   },
   "author": "rhodri@gmail.com",
   "devDependencies": {},
