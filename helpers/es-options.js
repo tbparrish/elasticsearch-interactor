@@ -56,7 +56,7 @@ function constructSearchOptions(query) {
     })
   }
 
-  var query = constructQuery(filters),
+  var filterQuery = constructQuery(filters),
       sort = constructSort(query.sort);
 
   var searchOptions = {
@@ -66,7 +66,7 @@ function constructSearchOptions(query) {
     body: {
       from: query.offset || 0,
       size: query.size || 20,
-      query: query,
+      query: filterQuery,
       sort: sort
     }
   };
