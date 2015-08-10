@@ -81,7 +81,7 @@ function multiLineChart(splitField, valueField) {
   function transform(results) {
     return results.aggregations.time.buckets.map(function (bucket) {
       return { x: bucket.key_as_string, y: bucket.lines.buckets.map(function (line) {
-        return { key: line.key, value: line.yAxis[valueField] };
+        return { key: line.key, value: line.yAxis.value };
       }) };
     });
   }
@@ -102,6 +102,37 @@ function pieChart(field) {
   }
 
   return { aggregation: aggregation, transform: transform };
+}
+
+function table(x, y) {
+
+  var aggregation = {
+    "x": {
+      terms: { field: x },
+      aggregations: {
+        "y": {
+          terms: { field: y },
+          aggregations: {
+            "sum": {
+              sum: {
+                field: "value"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function transform(results) {
+    return results.aggregations.x.buckets.map(function (xBucket) {
+      return { x: xBucket.key, y: xBucket.y.buckets.map(function (yBucket) {
+        return { key: yBucket.key, value: yBucket.sum.value };
+      })};
+    });
+  }
+
+  return { aggregation: aggregation, transform: transform }
 }
 
 function aggregation(type, aggs, terms) {
@@ -139,13 +170,12 @@ module.exports = {
 
   cpu: aggregation("collectd", multiLineChart("type_instance"), { plugin: "cpu" }),
   memory: aggregation("collectd", multiLineChart("type_instance"), { plugin: "memory" }),
-  swap: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "swap" })
+  swap: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "swap" }),
 
-  /* TODO too many questions about these, there are "tx" and "rx" values
-  interfacesOctets: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "interface", collectd_type: "if_octets" }),
-  interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "interface", collectd_type: "if_packets" }),
-  interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "interface", collectd_type: "if_errors" })
-  */
+  // TODO figure out what to do with "tx" and "rx" values
+  interfacesOctets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_octets" }),
+  interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_packets" }),
+  interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_errors" }),
 
-  // TODO table aggregation
+  connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" })
 };
