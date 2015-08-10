@@ -10,23 +10,27 @@ function constructOptions(type, body) {
   };
 }
 
-function constructFilter(fromIso, toIso, hostname, terms) {
+function constructFilter(fromIso, toIso, hostname, extraTerms) {
 
-  var terms = hostname || terms
-              ? _(terms || {}).assign({ hostname: hostname }).toObject()
-              : void(0);
+  var filters = [{
+    range: {
+      "@timestamp": {
+        gte: fromIso,
+        lte: toIso,
+        format: 'date_optional_time'
+      }
+    }
+  }];
+
+  if (hostname) filters.push({ term: { hostname: hostname }});
+  if (extraTerms) {
+    _(extraTerms).each(function (value, key) {
+      var obj = {}; obj[key] = value; filters.push({ term: obj })
+    });
+  }
 
   return {
-    filtered: { filter: { bool: { must: {
-      range: {
-        "@timestamp": {
-          gte: fromIso,
-          lte: toIso,
-          format: 'date_optional_time'
-        }
-      },
-      term: terms
-    }}}}
+    filtered: { filter: { bool: { must: filters }}}
   };
 }
 
@@ -53,6 +57,38 @@ function lineChart(aggs) {
   return { aggregation: aggregation, transform: transform };
 }
 
+function multiLineChart(splitField, valueField) {
+
+  valueField = valueField || "value";
+
+  var aggregation = {
+    "time": {
+      date_histogram: {
+        field: "@timestamp",
+        interval: "1h" // TODO rhodri, auto calculate
+      },
+      aggregations: {
+        "lines": {
+          terms: { field: splitField },
+          aggregations: {
+            "yAxis": { max: { field: valueField }}
+          }
+        }
+      }
+    }
+  };
+
+  function transform(results) {
+    return results.aggregations.time.buckets.map(function (bucket) {
+      return { x: bucket.key_as_string, y: bucket.lines.buckets.map(function (line) {
+        return { key: line.key, value: line.yAxis[valueField] };
+      }) };
+    });
+  }
+
+  return { aggregation: aggregation, transform: transform };
+}
+
 function pieChart(field) {
 
   var aggregation = {
@@ -68,7 +104,7 @@ function pieChart(field) {
   return { aggregation: aggregation, transform: transform };
 }
 
-function aggregation(type, aggs) {
+function aggregation(type, aggs, terms) {
 
   return function(params) {
 
@@ -76,7 +112,7 @@ function aggregation(type, aggs) {
         toIso = moment(params.to).utc().toISOString();
 
     var options = constructOptions(type, {
-      query: constructFilter(fromIso, toIso, params.hostname),
+      query: constructFilter(fromIso, toIso, params.hostname, terms),
       aggregations: aggs.aggregation
     });
 
@@ -99,6 +135,17 @@ module.exports = {
   })),
 
   errorMessage: aggregation("syslog", pieChart("error_message")),
-  errorReason: aggregation("syslog", pieChart("error_reason"))
+  errorReason: aggregation("syslog", pieChart("error_reason")),
 
+  cpu: aggregation("collectd", multiLineChart("type_instance"), { plugin: "cpu" }),
+  memory: aggregation("collectd", multiLineChart("type_instance"), { plugin: "memory" }),
+  swap: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "swap" })
+
+  /* TODO too many questions about these, there are "tx" and "rx" values
+  interfacesOctets: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "interface", collectd_type: "if_octets" }),
+  interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "interface", collectd_type: "if_packets" }),
+  interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "interface", collectd_type: "if_errors" })
+  */
+
+  // TODO table aggregation
 };
