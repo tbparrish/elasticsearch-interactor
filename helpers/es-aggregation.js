@@ -4,7 +4,7 @@ function constructOptions(type, body) {
   return {
     index: 'overwatch-*',
     search_type: 'count',
-    type: type || 'syslog',
+    type: type,
     ignore_unavailable: true,
     body: _(body).defaults({ size: 0 }).toObject()
   };
@@ -17,22 +17,16 @@ function constructFilter(fromIso, toIso, hostname, terms) {
               : void(0);
 
   return {
-    filtered: {
-      filter: {
-        bool: {
-          must: {
-            range: {
-              "@timestamp": {
-                gte: fromIso,
-                lte: toIso,
-                format: 'date_optional_time'
-              }
-            },
-            term: terms
-          }
+    filtered: { filter: { bool: { must: {
+      range: {
+        "@timestamp": {
+          gte: fromIso,
+          lte: toIso,
+          format: 'date_optional_time'
         }
-      }
-    }
+      },
+      term: terms
+    }}}}
   };
 }
 
@@ -43,26 +37,39 @@ function constructAggs(aggs) {
         field: "@timestamp",
         interval: "1h" // TODO rhodri, auto calculate
       },
-      aggregations: aggs
+      aggregations: {
+        "yAxis": aggs
+      }
     }
   };
 }
 
-function responseTimeAggregation(params) {
-  var fromIso = moment(params.from).utc().toISOString(),
-      toIso = moment(params.to).utc().toISOString();
-  return constructOptions("syslog", {
-    query: constructFilter(fromIso, toIso, params.hostname),
-    aggregations: constructAggs({
-      "responseTime": {
-        avg: {
-          field: "response_time_ms"
-        }
-      }
-    })  
-  });
+function aggregation(type, aggs) {
+
+  return function(params) {
+
+    var fromIso = moment(params.from).utc().toISOString(),
+        toIso = moment(params.to).utc().toISOString();
+
+    return constructOptions(type, {
+      query: constructFilter(fromIso, toIso, params.hostname),
+      aggregations: constructAggs(aggs)  
+    });
+  }
 }
 
 module.exports = {
-  responseTime: responseTimeAggregation
+
+  responseTime: aggregation("syslog", {
+    avg: {
+      field: "response_time_ms"
+    }
+  }),
+
+  signatures: aggregation("syslog", {
+    max: {
+      field: "request_count"
+    }
+  }),
+
 };
