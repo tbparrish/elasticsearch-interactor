@@ -30,8 +30,9 @@ function constructFilter(fromIso, toIso, hostname, terms) {
   };
 }
 
-function constructAggs(aggs) {
-  return {
+function lineChart(aggs) {
+
+  var aggregation = {
     "time": {
       date_histogram: {
         field: "@timestamp",
@@ -42,6 +43,29 @@ function constructAggs(aggs) {
       }
     }
   };
+
+  function transform(results) {
+    return results.aggregations.time.buckets.map(function (bucket) {
+      return { x: bucket.key_as_string, y: bucket.yAxis.value };
+    });
+  }
+
+  return { aggregation: aggregation, transform: transform };
+}
+
+function pieChart(field) {
+
+  var aggregation = {
+    "slices": { terms: { field: field }}
+  };
+
+  function transform(results) {
+    return results.aggregations.slices.buckets.map(function (bucket) {
+      return { x: bucket.key, y: bucket.doc_count };
+    });
+  }
+
+  return { aggregation: aggregation, transform: transform };
 }
 
 function aggregation(type, aggs) {
@@ -51,25 +75,30 @@ function aggregation(type, aggs) {
     var fromIso = moment(params.from).utc().toISOString(),
         toIso = moment(params.to).utc().toISOString();
 
-    return constructOptions(type, {
+    var options = constructOptions(type, {
       query: constructFilter(fromIso, toIso, params.hostname),
-      aggregations: constructAggs(aggs)  
+      aggregations: aggs.aggregation
     });
+
+    return { options: options, transform: aggs.transform };
   }
 }
 
 module.exports = {
 
-  responseTime: aggregation("syslog", {
+  responseTime: aggregation("syslog", lineChart({
     avg: {
       field: "response_time_ms"
     }
-  }),
+  })),
 
-  signatures: aggregation("syslog", {
+  signatures: aggregation("syslog", lineChart({
     max: {
       field: "request_count"
     }
-  }),
+  })),
+
+  errorMessage: aggregation("syslog", pieChart("error_message")),
+  errorReason: aggregation("syslog", pieChart("error_reason"))
 
 };

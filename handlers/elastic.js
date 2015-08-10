@@ -12,10 +12,6 @@ on('ElasticQuery', function (query) {
 });
 
 on('ElasticAggregation', function (params) {
-  var query = params.query, aggOptions = aggs[query](params);
-  return es.search(aggOptions).then(function (results) {
-    return results.aggregations.time.buckets.map(function (bucket) {
-      return { x: bucket.key_as_string, y: bucket.yAxis.value };
-    });
-  });
+  var query = params.query, aggregation = aggs[query](params);
+  return es.search(aggregation.options).then(aggregation.transform);
 });
