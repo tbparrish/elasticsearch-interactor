@@ -17,6 +17,6 @@
     "elasticsearch": "^4.1.0",
     "moment": "^2.10.3",
     "moment-range": "^1.1.0",
-    "persephone-ms": "git@github.com:GuardTime/persephone-ms.git#a91707ac9f1fabf8e46da158fe57cf0b2b560168"
+    "persephone-ms": "git@github.com:GuardTime/persephone-ms.git#f0f272ad8b5c8c556a9a3d1731c6e712894de920"
   }
 }
