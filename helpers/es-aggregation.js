@@ -36,17 +36,24 @@ function constructFilter(fromIso, toIso, hostname, extraTerms) {
 
 function lineChart(aggs) {
 
-  var aggregation = {
-    "time": {
-      date_histogram: {
-        field: "@timestamp",
-        interval: "1m" // TODO rhodri, auto calculate
-      },
-      aggregations: {
-        "yAxis": aggs
+  function aggregation (from, to, interval) {
+    return {
+      "time": {
+        date_histogram: {
+          field: "@timestamp",
+          interval: interval || "minute", // TODO rhodri, auto calculate,
+          min_doc_count: 0,
+          extended_bounds : {
+            min: from,
+            max: to
+          }
+        },
+        aggregations: {
+          "yAxis": aggs
+        }
       }
-    }
-  };
+    };
+  }
 
   function transform(results) {
     return results.aggregations.time.buckets.map(function (bucket) {
@@ -61,22 +68,29 @@ function multiLineChart(splitField, valueField) {
 
   valueField = valueField || "value";
 
-  var aggregation = {
-    "time": {
-      date_histogram: {
-        field: "@timestamp",
-        interval: "1h" // TODO rhodri, auto calculate
-      },
-      aggregations: {
-        "lines": {
-          terms: { field: splitField },
-          aggregations: {
-            "yAxis": { max: { field: valueField }}
+  function aggregation (from, to, interval) {
+    return {
+      "time": {
+        date_histogram: {
+          field: "@timestamp",
+          interval: interval || "1h", // TODO rhodri, auto calculate
+          min_doc_count: 0,
+          extended_bounds : {
+            min: from,
+            max: to
+          }
+        },
+        aggregations: {
+          "lines": {
+            terms: { field: splitField },
+            aggregations: {
+              "yAxis": { max: { field: valueField }}
+            }
           }
         }
       }
-    }
-  };
+    };
+  }
 
   function transform(results) {
     return results.aggregations.time.buckets.map(function (bucket) {
@@ -91,9 +105,11 @@ function multiLineChart(splitField, valueField) {
 
 function pieChart(field) {
 
-  var aggregation = {
-    "slices": { terms: { field: field }}
-  };
+  function aggregation () {
+    return {
+      "slices": { terms: { field: field } }
+    }
+  }
 
   function transform(results) {
     return results.aggregations.slices.buckets.map(function (bucket) {
@@ -106,22 +122,24 @@ function pieChart(field) {
 
 function table(x, y) {
 
-  var aggregation = {
-    "x": {
-      terms: { field: x },
-      aggregations: {
-        "y": {
-          terms: { field: y },
-          aggregations: {
-            "sum": {
-              sum: {
-                field: "value"
+  function aggregation () {
+    return {
+      "x": {
+        terms: { field: x },
+        aggregations: {
+          "y": {
+            terms: { field: y },
+            aggregations: {
+              "sum": {
+                sum: {
+                  field: "value"
+                }
               }
             }
           }
         }
       }
-    }
+    };
   }
 
   function transform(results) {
@@ -144,7 +162,7 @@ function aggregation(type, aggs, terms) {
 
     var options = constructOptions(type, {
       query: constructFilter(fromIso, toIso, params.hostname, terms),
-      aggregations: aggs.aggregation
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval)
     });
 
     return { options: options, transform: aggs.transform };
