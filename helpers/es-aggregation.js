@@ -62,14 +62,14 @@ function multiLineChart(splitField, valueField) {
   valueField = valueField || "value";
 
   var aggregation = {
-    "time": {
-      date_histogram: {
-        field: "@timestamp",
-        interval: "1h" // TODO rhodri, auto calculate
-      },
+    "lines": {
+      terms: { field: splitField },
       aggregations: {
-        "lines": {
-          terms: { field: splitField },
+        "time": {
+          date_histogram: {
+            field: "@timestamp",
+            interval: "1h" // TODO rhodri, auto calculate
+          },
           aggregations: {
             "yAxis": { max: { field: valueField }}
           }
@@ -79,10 +79,10 @@ function multiLineChart(splitField, valueField) {
   };
 
   function transform(results) {
-    return results.aggregations.time.buckets.map(function (bucket) {
-      return { x: bucket.key_as_string, y: bucket.lines.buckets.map(function (line) {
-        return { key: line.key, value: line.yAxis.value };
-      }) };
+    return results.aggregations.lines.buckets.map(function (line) {
+      return { key: line.key, y: line.time.buckets.map(function (bucket) {
+        return { x: bucket.key_as_string, y: bucket.yAxis.value };
+      })};
     });
   }
 
