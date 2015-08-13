@@ -70,33 +70,34 @@ function multiLineChart(splitField, valueField) {
 
   function aggregation (from, to, interval) {
     return {
-      "time": {
-        date_histogram: {
-          field: "@timestamp",
-          interval: interval || "1h", // TODO rhodri, auto calculate
-          min_doc_count: 0,
-          extended_bounds : {
-            min: from,
-            max: to
-          }
-        },
+      "lines": {
+        terms: { field: splitField },
         aggregations: {
-          "lines": {
-            terms: { field: splitField },
+          "time": {
+            date_histogram: {
+              field: "@timestamp",
+              interval: interval || 'hour'
+              min_doc_count: 0,
+              extended_bounds : {
+                min: from,
+                max: to
+              }
+            },
             aggregations: {
               "yAxis": { max: { field: valueField }}
             }
           }
         }
       }
+    }
     };
   }
 
   function transform(results) {
-    return results.aggregations.time.buckets.map(function (bucket) {
-      return { x: bucket.key_as_string, y: bucket.lines.buckets.map(function (line) {
-        return { key: line.key, value: line.yAxis.value };
-      }) };
+    return results.aggregations.lines.buckets.map(function (line) {
+      return { key: line.key, values: line.time.buckets.map(function (bucket) {
+        return { x: bucket.key_as_string, y: bucket.yAxis.value };
+      })};
     });
   }
 
