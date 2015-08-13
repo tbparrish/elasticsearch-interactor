@@ -40,7 +40,7 @@ function lineChart(aggs) {
     "time": {
       date_histogram: {
         field: "@timestamp",
-        interval: "1h" // TODO rhodri, auto calculate
+        interval: "1m" // TODO rhodri, auto calculate
       },
       aggregations: {
         "yAxis": aggs
