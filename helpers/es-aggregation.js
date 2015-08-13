@@ -76,7 +76,7 @@ function multiLineChart(splitField, valueField) {
           "time": {
             date_histogram: {
               field: "@timestamp",
-              interval: interval || 'hour'
+              interval: interval || 'hour',
               min_doc_count: 0,
               extended_bounds : {
                 min: from,
@@ -89,7 +89,6 @@ function multiLineChart(splitField, valueField) {
           }
         }
       }
-    }
     };
   }
 
