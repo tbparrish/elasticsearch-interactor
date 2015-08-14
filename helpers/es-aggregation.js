@@ -147,10 +147,10 @@ function table(x, y) {
   function transform(results) {
     var keys = [ x ];
     var rows = [];
-    results.aggregations.x.buckets.forEach(function (xBucket) {
+    results.aggregations.x.buckets.forEach(function (xBucket, i) {
       var row = {};
       row[x] = xBucket.key;
-      xBucket.y.buckets.forEach(function (yBucket, i) {
+      xBucket.y.buckets.forEach(function (yBucket) {
         if (!i) keys.push(yBucket.key);
         row[yBucket.key] = yBucket.sum.value;
       });
