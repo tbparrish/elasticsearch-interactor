@@ -105,7 +105,7 @@ function multiLineChart(splitField, valueField) {
   return { aggregation: aggregation, transform: transform };
 }
 
-function sum(aggs) {
+function sum(aggs, unit) {
 
   function aggregation () {
     return {
@@ -114,7 +114,7 @@ function sum(aggs) {
   }
 
   function transform(results) {
-    return { value: results.aggregations.time.value };
+    return { value: results.aggregations.time.value, unit: unit };
   }
 
   return { aggregation: aggregation, transform: transform };
@@ -226,5 +226,5 @@ module.exports = {
     avg: {
       field: "response_time_ms"
     }
-  }))
+  }, 'ms'))
 };
