@@ -56,9 +56,11 @@ function lineChart(aggs) {
   }
 
   function transform(results) {
-    return results.aggregations.time.buckets.map(function (bucket) {
-      return { x: bucket.key_as_string, y: bucket.yAxis.value };
-    });
+    return [{
+      values: results.aggregations.time.buckets.map(function (bucket) {
+        return { x: bucket.key_as_string, y: bucket.yAxis.value };
+      })
+    }];
   }
 
   return { aggregation: aggregation, transform: transform };
