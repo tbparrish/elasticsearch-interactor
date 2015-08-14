@@ -145,11 +145,19 @@ function table(x, y) {
   }
 
   function transform(results) {
-    return results.aggregations.x.buckets.map(function (xBucket) {
-      return { x: xBucket.key, y: xBucket.y.buckets.map(function (yBucket) {
-        return { key: yBucket.key, value: yBucket.sum.value };
-      })};
+    var keys = [ x ];
+    var rows = [];
+    results.aggregations.x.buckets.forEach(function (xBucket) {
+      var row = {};
+      row[x] = xBucket.key;
+      xBucket.y.buckets.forEach(function (yBucket) {
+        if (!i) keys.push(yBucket.key);
+        row[yBucket.key] = yBucket.sum.value;
+      });
+      rows.push(row);
     });
+
+    return { keys: keys, rows: rows };
   }
 
   return { aggregation: aggregation, transform: transform }
