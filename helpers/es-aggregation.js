@@ -105,6 +105,21 @@ function multiLineChart(splitField, valueField) {
   return { aggregation: aggregation, transform: transform };
 }
 
+function sum(aggs) {
+
+  function aggregation () {
+    return {
+      "time": aggs
+    };
+  }
+
+  function transform(results) {
+    return { value: results.aggregations.time.value };
+  }
+
+  return { aggregation: aggregation, transform: transform };
+}
+
 function pieChart(field) {
 
   function aggregation () {
@@ -205,5 +220,11 @@ module.exports = {
   interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_packets" }),
   interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_errors" }),
 
-  connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" })
+  connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" }),
+
+  responseTimeAverage: aggregation("syslog", sum({
+    avg: {
+      field: "response_time_ms"
+    }
+  }))
 };
