@@ -150,7 +150,7 @@ function table(x, y) {
     results.aggregations.x.buckets.forEach(function (xBucket) {
       var row = {};
       row[x] = xBucket.key;
-      xBucket.y.buckets.forEach(function (yBucket) {
+      xBucket.y.buckets.forEach(function (yBucket, i) {
         if (!i) keys.push(yBucket.key);
         row[yBucket.key] = yBucket.sum.value;
       });
