@@ -30,7 +30,8 @@ function constructSearchOptions(query) {
   var filters = [],
       from = query.from,
       to = query.to,
-      hostname = query.hostname;
+      hostname = query.hostname,
+      additionalFilters = query.filters;
 
   if (from && to) {
 
@@ -46,6 +47,20 @@ function constructSearchOptions(query) {
         }
       }
     });
+  }
+
+  for (var term in additionalFilters) {
+      if (additionalFilters.hasOwnProperty(term)) {
+          var query = additionalFilters[term];
+          var field = term;
+
+          var q = {};
+          q[field] = query;
+
+          filters.push({
+              term: q
+          });
+      }
   }
 
   if (hostname) {
