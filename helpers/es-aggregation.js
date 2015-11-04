@@ -11,8 +11,9 @@ function constructOptions(type, body) {
 }
 
 function constructFilter(fromIso, toIso, hostnames, extraTerms) {
+  var shouldFilters = [];
 
-  var filters = [{
+  var mustFilters = [{
     range: {
       "@timestamp": {
         gte: fromIso,
@@ -24,19 +25,29 @@ function constructFilter(fromIso, toIso, hostnames, extraTerms) {
 
   if (extraTerms) {
     _(extraTerms).each(function (value, key) {
-      var obj = {}; obj[key] = value; filters.push({ term: obj })
+      var obj = {}; obj[key] = value; mustFilters.push({ term: obj })
     });
   }
 
   if(hostnames) {
-    for(var i = 0; i < hostnames.length; i++) {
-      var obj = {}; obj["host"] = hostnames[i]; filters.push({ term: obj })
+    if(Array.isArray(hostnames)) {
+      hostnames.map(function(hostname) {
+          var obj = {}; obj["host"] = hostname; shouldFilters.push({ term: obj })
+      });
+    } else {
+      shouldFilters.push({ term: { host: hostnames }});
     }
   }
 
-  return {
-    filtered: { filter: { bool: { must: filters }}}
-  };
+  if(shouldFilters.length === 0) {
+    return {
+      filtered: { filter: { bool: { must: mustFilters }}}
+    };
+  } else {
+    return {
+      filtered: { filter: { bool: { must: mustFilters, should: shouldFilters }}}
+    };
+  }
 }
 
 function lineChart(aggs) {
@@ -114,102 +125,148 @@ function cpuMultiLineChart(splitField, valueField) {
 
   valueField = valueField || "value";
 
-  function aggregation (from, to, interval, hostnames) {
-
-    var hosts = {};
-
-    if(hostnames) {
-      if( hostnames.length > 0 ) {
-        var filters = {};
-        for(var i = 0; i < hostnames.length; i++) {
-          filters[hostnames[i]] = {"term" : { "host": hostnames[i]}};
-        }
-        hosts["filters"] = {filters : filters};
-      } else {
-          hosts["terms"] = {field: splitField};
-      }
-    } else {
-        hosts["terms"] = {field: splitField};
-    }
-
-    hosts["aggregations"] = {  
-      "cpu_stats": { 
-          filters : {
-            filters : {
-              "user"  : {term : {"type_instance" : "user"}},
-              "nice"  : {term : {"type_instance" : "nice"}},
-              "system": {term : {"type_instance" : "system"}},
-              "idle"  : {term : {"type_instance" : "idle"}}
-            }
-          },
-         aggregations: {  
-            "time": {  
-               date_histogram: {  
-                field:"@timestamp",
-                interval: interval || 'hour',
-                min_doc_count:0,
-                extended_bounds:{  
-                   min: from,
-                   max: to
-                }
-               },
-               aggregations: {  
+  function aggregation (from, to, interval, filters) {
+    return {
+      "hosts": {
+        terms: { field: splitField },
+        aggregations : {
+          "stats" : {
+            filters: {
+              filters : filters
+            },
+            aggregations: {
+              "time": {
+                date_histogram: {
+                  field: "@timestamp",
+                  interval: interval || 'hour',
+                  min_doc_count: 0,
+                  extended_bounds : {
+                    min: from,
+                    max: to
+                  }
+                },
+                aggregations: {
                   "stat": { avg: { field: valueField }}
-               }
+                }
+              }
             }
-         }
+          }
+        }
       }
-    }
-    
-    return { hosts : hosts };
+    };
   }
 
   function transform(results) {
-    var transformAllHosts = false;
-
-    if(Array.isArray(results.aggregations.hosts.buckets)) {
-        transformAllHosts = true;
-    } 
-
-    if(transformAllHosts) {
-      return results.aggregations.hosts.buckets.map( function (host) {
-        return {
-          key : host.key, values : transformCpuStats(host.cpu_stats.buckets)
-        };
-      });
-    } else {
-        var stats = [];
-        for(var p in results.aggregations.hosts.buckets) {
-          if(results.aggregations.hosts.buckets.hasOwnProperty(p)) {
-            stats.push( { key : p, 
-                        values : 
-                        transformCpuStats(results.aggregations.hosts.buckets[p].cpu_stats.buckets)});
-        }
-      }
-      return stats;
-    }
+    return results.aggregations.hosts.buckets.map( function (host) {
+      return {
+        key : host.key, values : transformCpuStats(host.stats.buckets)
+      };
+    });
   }
 
+  // TODO: look into calcaluting using script
   function transformCpuStats(buckets) {
     var stats = [];
 
     for (var i = 0; i < buckets.user.time.buckets.length; i++) {
-
         var key = buckets.user.time.buckets[i].key_as_string;
+        var idle = buckets.idle.time.buckets[i].stat.value;
         var tempValue = buckets.user.time.buckets[i].stat.value +
                    buckets.nice.time.buckets[i].stat.value +
                    buckets.system.time.buckets[i].stat.value;
 
-        stats.push(
-          { 
-            x : key,
-            y : ((tempValue)/
-                (tempValue+buckets.idle.time.buckets[i].stat.value))*100
-          }
-        );
+        stats.push({ x : key, y : ((tempValue)/(tempValue+idle))*100});
       }
       return stats;
     }
+
+  return { aggregation: aggregation, transform: transform };
+}
+
+function memoryMultiLineChart(splitField, valueField) {
+
+  valueField = valueField || "value";
+
+  function aggregation (from, to, interval, filters) {
+    return {
+      "hosts": {
+        terms: { field: splitField },
+        aggregations : {
+          "stats" : {
+            filters: {
+              filters : filters
+            },
+            aggregations: {
+              "time": {
+                date_histogram: {
+                  field: "@timestamp",
+                  interval: interval || 'hour',
+                  min_doc_count: 0,
+                  extended_bounds : {
+                    min: from,
+                    max: to
+                  }
+                },
+                aggregations: {
+                  "stat": { avg: { field: valueField }}
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+
+  function transform(results) {
+    if(results.aggregations.hosts.buckets.length === 1) {
+      return transformMemoryStat(results.aggregations.hosts.buckets);
+    } else {
+      return results.aggregations.hosts.buckets.map(function (host) {
+          return {key : host.key, values : transformMemoryStats(host.stats.buckets)};
+      });
+    }
+  }
+
+  // TODO: look into calcaluting using script
+  function transformMemoryStat(buckets) {
+    var stats = [];
+    var usedMemoryValues = [];
+    var totalMemoryValues = [];
+
+    for(var i = 0; i < buckets.length; i++) {
+      for(var j = 0; j< buckets[i].stats.buckets.used.time.buckets.length; j++) {
+        var key = buckets[i].stats.buckets.used.time.buckets[j].key_as_string;
+        var usedMemory = buckets[i].stats.buckets.used.time.buckets[j].stat.value;
+        var totalMemory = buckets[i].stats.buckets.used.time.buckets[j].stat.value +
+                          buckets[i].stats.buckets.free.time.buckets[j].stat.value;
+
+        usedMemoryValues.push({x: key, y: usedMemory});
+        totalMemoryValues.push({x: key, y: totalMemory});
+      }
+    }
+
+    stats.push({key: "Used Memory", values: usedMemoryValues});
+    stats.push({key: "Total Memory", values: totalMemoryValues});
+
+    return stats;
+  }
+
+  // TODO: look into calcaluting using script
+  function transformMemoryStats(buckets) {
+    var stats = [];
+
+    for (var i = 0; i < buckets.used.time.buckets.length; i++) {
+      var key = buckets.used.time.buckets[i].key_as_string;
+      var usedMemory = buckets.used.time.buckets[i].stat.value;
+      var totalMemory = buckets.used.time.buckets[i].stat.value +
+                        buckets.free.time.buckets[i].stat.value;
+
+      stats.push({x : key, y : (usedMemory/totalMemory)*100});
+    } 
+
+    return stats;
+  }
 
   return { aggregation: aggregation, transform: transform };
 }
@@ -287,7 +344,7 @@ function table(x, y) {
   return { aggregation: aggregation, transform: transform }
 }
 
-function aggregation(type, aggs, terms) {
+function aggregation(type, aggs, terms, filters) {
 
   return function(params) {
 
@@ -296,7 +353,7 @@ function aggregation(type, aggs, terms) {
 
     var options = constructOptions(type, {
       query: constructFilter(fromIso, toIso, params.hostnames, terms),
-      aggregations: aggs.aggregation(fromIso, toIso, params.interval, params.hostnames)
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters)
     });
 
     return { options: options, transform: aggs.transform };
@@ -321,8 +378,12 @@ module.exports = {
   errorReason: aggregation("syslog", pieChart("error_reason")),
 
   //cpu: aggregation("collectd", multiLineChart("type_instance"), { plugin: "cpu" }),
-  cpu: aggregation("collectd", cpuMultiLineChart("host"), { plugin: "cpu" }),
-  memory: aggregation("collectd", multiLineChart("type_instance"), { plugin: "memory" }),
+  cpu: aggregation("collectd", cpuMultiLineChart("host"), { plugin: "cpu" },
+    { "user"  : {term : {"type_instance" : "user"}},"nice"  : {term : {"type_instance" : "nice"}},
+                  "system": {term : {"type_instance" : "system"}}, "idle"  : {term : {"type_instance" : "idle"}}}),
+  //memory: aggregation("collectd", multiLineChart("type_instance"), { plugin: "memory" }),
+  memory: aggregation("collectd", memoryMultiLineChart("host"), { plugin: "memory" },
+    { "used"  : {term : {"type_instance" : "used"}},"free"  : {term : {"type_instance" : "free"}}}),
   swap: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "swap" }),
 
   // TODO figure out what to do with "tx" and "rx" values
