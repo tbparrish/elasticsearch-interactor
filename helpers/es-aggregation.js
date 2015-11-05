@@ -25,14 +25,14 @@ function constructFilter(fromIso, toIso, hostnames, extraTerms) {
 
   if (extraTerms) {
     _(extraTerms).each(function (value, key) {
-      var obj = {}; obj[key] = value; mustFilters.push({ term: obj })
+      var obj = {}; obj[key] = value; mustFilters.push({ term: obj });
     });
   }
 
   if(hostnames) {
     if(Array.isArray(hostnames)) {
       hostnames.map(function(hostname) {
-          var obj = {}; obj["host"] = hostname; shouldFilters.push({ term: obj })
+          var obj = {}; obj.host = hostname; shouldFilters.push({ term: obj });
       });
     } else {
       shouldFilters.push({ term: { host: hostnames }});
@@ -54,7 +54,7 @@ function lineChart(aggs) {
 
   function aggregation (from, to, interval) {
     return {
-      "time": {
+       time: {
         date_histogram: {
           field: "@timestamp",
           interval: interval || "minute", // TODO rhodri, auto calculate,
@@ -65,7 +65,7 @@ function lineChart(aggs) {
           }
         },
         aggregations: {
-          "yAxis": aggs
+          yAxis: aggs
         }
       }
     };
@@ -88,10 +88,10 @@ function multiLineChart(splitField, valueField) {
 
   function aggregation (from, to, interval) {
     return {
-      "lines": {
+      lines: {
         terms: { field: splitField },
         aggregations: {
-          "time": {
+          time: {
             date_histogram: {
               field: "@timestamp",
               interval: interval || 'hour',
@@ -102,7 +102,7 @@ function multiLineChart(splitField, valueField) {
               }
             },
             aggregations: {
-              "yAxis": { max: { field: valueField }}
+              yAxis: { max: { field: valueField }}
             }
           }
         }
@@ -127,15 +127,15 @@ function cpuMultiLineChart(splitField, valueField) {
 
   function aggregation (from, to, interval, filters) {
     return {
-      "hosts": {
+       hosts: {
         terms: { field: splitField },
         aggregations : {
-          "stats" : {
+           stats: {
             filters: {
               filters : filters
             },
             aggregations: {
-              "time": {
+              time: {
                 date_histogram: {
                   field: "@timestamp",
                   interval: interval || 'hour',
@@ -146,7 +146,7 @@ function cpuMultiLineChart(splitField, valueField) {
                   }
                 },
                 aggregations: {
-                  "stat": { avg: { field: valueField }}
+                  stat: { avg: { field: valueField }}
                 }
               }
             }
@@ -166,12 +166,13 @@ function cpuMultiLineChart(splitField, valueField) {
 
   // TODO: look into calcaluting using script
   function transformCpuStats(buckets) {
+    var key = null, idle = null, tempValue = null, i = null;
     var stats = [];
 
-    for (var i = 0; i < buckets.user.time.buckets.length; i++) {
-        var key = buckets.user.time.buckets[i].key_as_string;
-        var idle = buckets.idle.time.buckets[i].stat.value;
-        var tempValue = buckets.user.time.buckets[i].stat.value +
+    for (i = 0; i < buckets.user.time.buckets.length; i++) {
+        key = buckets.user.time.buckets[i].key_as_string;
+        idle = buckets.idle.time.buckets[i].stat.value;
+        tempValue = buckets.user.time.buckets[i].stat.value +
                    buckets.nice.time.buckets[i].stat.value +
                    buckets.system.time.buckets[i].stat.value;
 
@@ -189,15 +190,15 @@ function memoryMultiLineChart(splitField, valueField) {
 
   function aggregation (from, to, interval, filters) {
     return {
-      "hosts": {
+      hosts: {
         terms: { field: splitField },
         aggregations : {
-          "stats" : {
+          stats: {
             filters: {
               filters : filters
             },
             aggregations: {
-              "time": {
+              time: {
                 date_histogram: {
                   field: "@timestamp",
                   interval: interval || 'hour',
@@ -208,7 +209,7 @@ function memoryMultiLineChart(splitField, valueField) {
                   }
                 },
                 aggregations: {
-                  "stat": { avg: { field: valueField }}
+                  stat: { avg: { field: valueField }}
                 }
               }
             }
@@ -219,37 +220,9 @@ function memoryMultiLineChart(splitField, valueField) {
   }
 
   function transform(results) {
-    if(results.aggregations.hosts.buckets.length === 1) {
-      return transformMemoryStat(results.aggregations.hosts.buckets);
-    } else {
-      return results.aggregations.hosts.buckets.map(function (host) {
-          return {key : host.key, values : transformMemoryStats(host.stats.buckets)};
-      });
-    }
-  }
-
-  // TODO: look into calcaluting using script
-  function transformMemoryStat(buckets) {
-    var stats = [];
-    var usedMemoryValues = [];
-    var totalMemoryValues = [];
-
-    for(var i = 0; i < buckets.length; i++) {
-      for(var j = 0; j< buckets[i].stats.buckets.used.time.buckets.length; j++) {
-        var key = buckets[i].stats.buckets.used.time.buckets[j].key_as_string;
-        var usedMemory = buckets[i].stats.buckets.used.time.buckets[j].stat.value;
-        var totalMemory = buckets[i].stats.buckets.used.time.buckets[j].stat.value +
-                          buckets[i].stats.buckets.free.time.buckets[j].stat.value;
-
-        usedMemoryValues.push({x: key, y: usedMemory});
-        totalMemoryValues.push({x: key, y: totalMemory});
-      }
-    }
-
-    stats.push({key: "Used Memory", values: usedMemoryValues});
-    stats.push({key: "Total Memory", values: totalMemoryValues});
-
-    return stats;
+    return results.aggregations.hosts.buckets.map(function (host) {
+      return {key : host.key, values : transformMemoryStats(host.stats.buckets)};
+    });
   }
 
   // TODO: look into calcaluting using script
@@ -263,7 +236,7 @@ function memoryMultiLineChart(splitField, valueField) {
                         buckets.free.time.buckets[i].stat.value;
 
       stats.push({x : key, y : (usedMemory/totalMemory)*100});
-    } 
+    }
 
     return stats;
   }
@@ -310,10 +283,10 @@ function table(x, y) {
       "x": {
         terms: { field: x },
         aggregations: {
-          "y": {
+          y: {
             terms: { field: y },
             aggregations: {
-              "sum": {
+              sum: {
                 sum: {
                   field: "value"
                 }
