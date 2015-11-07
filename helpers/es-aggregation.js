@@ -241,8 +241,10 @@ function memoryMultiLineChart(splitField, valueField) {
     return stats;
   }
 
+
   return { aggregation: aggregation, transform: transform };
 }
+
 
 function octetsMultiLineChart(splitField, valueField) {
 
@@ -273,29 +275,33 @@ function octetsMultiLineChart(splitField, valueField) {
     };
   }
 
-  function transform(results) {
-    return results.aggregations.hosts.buckets.map(function (host) {
-      return { key: host.key, values: transformOctetsStats(host.time.buckets)};
-    });
-  }
-
   // TODO: look into calcaluting using script
-  function transformOctetsStats(buckets) {
-    var key = null, rxValue = null, txValue = null, tempValue = null;
-    var stats = [];
+  function transform(results) {
+    var i = null, key = null, idx = null, key_as_string = null; rxValues = [], txValues = [], retVal = [];
+    var hosts = results.aggregations.hosts.buckets;
 
-    for (i = 0; i < buckets.length - 1; i++) {
-        tempValue = i + 1;
-        key = buckets[tempValue].key_as_string;
-        rxValue = buckets[tempValue].rx.value - buckets[i].rx.value;
-        txValue = buckets[tempValue].tx.value - buckets[i].tx.value;
+    for (i = 0; i < hosts.length; i += 1 ) {
+        key = hosts[i].key;
 
-        stats.push({ x: key, rx: rxValue, tx: txValue });
+        for (var j = 0;  j < hosts[i].time.buckets.length - 1; j += 1) {
+          idx = j + 1;
+          key_as_string = hosts[i].time.buckets[idx].key_as_string;
+
+          rxValues.push({x: key_as_string, 
+                        y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
+          txValues.push({x: key_as_string,
+                        y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
+        }
+        idx = 0;
+
+        retVal.push({ key: key+" rx", values: rxValues});
+        retVal.push({ key: key+ " tx", values: txValues});
       }
-      return stats;
+
+      return retVal;
     }
 
-  return { aggregation: aggregation, transform: transform };
+    return { aggregation: aggregation, transform: transform };
 }
 
 function sum(aggs, unit) {
