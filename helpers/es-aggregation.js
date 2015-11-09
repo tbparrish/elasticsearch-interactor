@@ -277,11 +277,14 @@ function octetsMultiLineChart(splitField, valueField) {
 
   // TODO: look into calcaluting using script
   function transform(results) {
-    var i = null, key = null, idx = null, key_as_string = null; rxValues = [], txValues = [], retVal = [];
+    var key = null, idx = null, key_as_string = null, rxValues = [], txValues = [], retVal = [];
     var hosts = results.aggregations.hosts.buckets;
 
-    for (i = 0; i < hosts.length; i += 1 ) {
+    for (var i = 0; i < hosts.length; i += 1 ) {
         key = hosts[i].key;
+
+        rxValues = [];
+        txValues = [];
 
         for (var j = 0;  j < hosts[i].time.buckets.length - 1; j += 1) {
           idx = j + 1;
@@ -292,10 +295,9 @@ function octetsMultiLineChart(splitField, valueField) {
           txValues.push({x: key_as_string,
                         y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
         }
-        idx = 0;
-
+  
         retVal.push({ key: key+" rx", values: rxValues});
-        retVal.push({ key: key+ " tx", values: txValues});
+        retVal.push({ key: key+" tx", values: txValues});
       }
 
       return retVal;
