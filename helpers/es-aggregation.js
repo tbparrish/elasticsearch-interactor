@@ -169,7 +169,7 @@ function cpuMultiLineChart(splitField, valueField) {
     var key = null, idle = null, tempValue = null, i = null;
     var stats = [];
 
-    for (i = 0; i < buckets.user.time.buckets.length; i++) {
+    for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
         key = buckets.user.time.buckets[i].key_as_string;
         idle = buckets.idle.time.buckets[i].stat.value;
         tempValue = buckets.user.time.buckets[i].stat.value +
@@ -229,7 +229,7 @@ function memoryMultiLineChart(splitField, valueField) {
   function transformMemoryStats(buckets) {
     var stats = [];
 
-    for (var i = 0; i < buckets.used.time.buckets.length; i++) {
+    for (var i = 0; i < buckets.used.time.buckets.length; i += 1) {
       var key = buckets.used.time.buckets[i].key_as_string;
       var usedMemory = buckets.used.time.buckets[i].stat.value;
       var totalMemory = buckets.used.time.buckets[i].stat.value +
@@ -245,12 +245,11 @@ function memoryMultiLineChart(splitField, valueField) {
   return { aggregation: aggregation, transform: transform };
 }
 
-
 function octetsMultiLineChart(splitField, valueField) {
 
   valueField = valueField || "value";
 
-  function aggregation (from, to, interval, filters) {
+  function aggregation (from, to, interval) {
     return {
        hosts: {
         terms: { field: splitField },
@@ -290,12 +289,68 @@ function octetsMultiLineChart(splitField, valueField) {
           idx = j + 1;
           key_as_string = hosts[i].time.buckets[idx].key_as_string;
 
-          rxValues.push({x: key_as_string, 
-                        y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
-          txValues.push({x: key_as_string,
-                        y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
+          rxValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
+          txValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
         }
-  
+        retVal.push({ key: key+" rx", values: rxValues});
+        retVal.push({ key: key+" tx", values: txValues});
+      }
+
+      return retVal;
+    }
+
+    return { aggregation: aggregation, transform: transform };
+}
+
+
+
+function packetsMultiLineChart(splitField, valueField) {
+
+  valueField = valueField || "value";
+
+  function aggregation (from, to, interval) {
+    return {
+       hosts: {
+        terms: { field: splitField },
+        aggregations: {
+          time: {
+            date_histogram: {
+              field: "@timestamp",
+              interval: interval || 'hour',
+              min_doc_count: 0,
+              extended_bounds : {
+                min: from,
+                max: to
+              }
+            },
+            aggregations: {
+              rx: { avg: { field: "rx" }},
+              tx: { avg: { field: "tx" }}
+            }
+          }
+        }
+      }
+    };
+  }
+
+  // TODO: look into calcaluting using script
+  function transform(results) {
+    var key = null, idx = null, key_as_string = null, rxValues = [], txValues = [], retVal = [];
+    var hosts = results.aggregations.hosts.buckets;
+
+    for (var i = 0; i < hosts.length; i += 1 ) {
+        key = hosts[i].key;
+
+        rxValues = [];
+        txValues = [];
+
+        for (var j = 0;  j < hosts[i].time.buckets.length - 1; j += 1) {
+          idx = j + 1;
+          key_as_string = hosts[i].time.buckets[idx].key_as_string;
+
+          rxValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
+          txValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
+        }
         retVal.push({ key: key+" rx", values: rxValues});
         retVal.push({ key: key+" tx", values: txValues});
       }
@@ -424,7 +479,8 @@ module.exports = {
   // TODO figure out what to do with "tx" and "rx" values
   //interfacesOctets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_octets" }),
   interfacesOctets: aggregation("collectd", octetsMultiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" }),
-  interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_packets" }),
+  //interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_packets" }),
+  interfacesPackets: aggregation("collectd", packetsMultiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" }),
   interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_errors" }),
 
   connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" }),
