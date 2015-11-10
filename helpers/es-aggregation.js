@@ -1,3 +1,8 @@
+var cpu = require('./aggregators/cpu'),
+    memory = require('./aggregators/memory'),
+    octets = require('./aggregators/octets'),
+    packets = require('./aggregators/packets');
+
 var moment = require('moment');
 
 function constructOptions(type, body) {
@@ -121,251 +126,11 @@ function multiLineChart(splitField, valueField) {
   return { aggregation: aggregation, transform: transform };
 }
 
-function cpuMultiLineChart(splitField, valueField) {
-
-  valueField = valueField || "value";
-
-  function aggregation (from, to, interval, filters) {
-    return {
-       hosts: {
-        terms: { field: splitField },
-        aggregations : {
-           stats: {
-            filters: {
-              filters : filters
-            },
-            aggregations: {
-              time: {
-                date_histogram: {
-                  field: "@timestamp",
-                  interval: interval || 'hour',
-                  min_doc_count: 0,
-                  extended_bounds : {
-                    min: from,
-                    max: to
-                  }
-                },
-                aggregations: {
-                  stat: { avg: { field: valueField }}
-                }
-              }
-            }
-          }
-        }
-      }
-    };
-  }
-
-  function transform(results) {
-    return results.aggregations.hosts.buckets.map( function (host) {
-      return {
-        key : host.key, values : transformCpuStats(host.stats.buckets)
-      };
-    });
-  }
-
-  // TODO: look into calcaluting using script
-  function transformCpuStats(buckets) {
-    var key = null, idle = null, tempValue = null, i = null;
-    var stats = [];
-
-    for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
-        key = buckets.user.time.buckets[i].key_as_string;
-        idle = buckets.idle.time.buckets[i].stat.value;
-        tempValue = buckets.user.time.buckets[i].stat.value +
-                   buckets.nice.time.buckets[i].stat.value +
-                   buckets.system.time.buckets[i].stat.value;
-
-        stats.push({ x : key, y : ((tempValue)/(tempValue+idle))*100});
-      }
-      return stats;
-    }
-
-  return { aggregation: aggregation, transform: transform };
-}
-
-function memoryMultiLineChart(splitField, valueField) {
-
-  valueField = valueField || "value";
-
-  function aggregation (from, to, interval, filters) {
-    return {
-      hosts: {
-        terms: { field: splitField },
-        aggregations : {
-          stats: {
-            filters: {
-              filters : filters
-            },
-            aggregations: {
-              time: {
-                date_histogram: {
-                  field: "@timestamp",
-                  interval: interval || 'hour',
-                  min_doc_count: 0,
-                  extended_bounds : {
-                    min: from,
-                    max: to
-                  }
-                },
-                aggregations: {
-                  stat: { avg: { field: valueField }}
-                }
-              }
-            }
-          }
-        }
-      }
-    };
-  }
-
-  function transform(results) {
-    return results.aggregations.hosts.buckets.map(function (host) {
-      return {key : host.key, values : transformMemoryStats(host.stats.buckets)};
-    });
-  }
-
-  // TODO: look into calcaluting using script
-  function transformMemoryStats(buckets) {
-    var stats = [];
-
-    for (var i = 0; i < buckets.used.time.buckets.length; i += 1) {
-      var key = buckets.used.time.buckets[i].key_as_string;
-      var usedMemory = buckets.used.time.buckets[i].stat.value;
-      var totalMemory = buckets.used.time.buckets[i].stat.value +
-                        buckets.free.time.buckets[i].stat.value;
-
-      stats.push({x : key, y : (usedMemory/totalMemory)*100});
-    }
-
-    return stats;
-  }
-
-
-  return { aggregation: aggregation, transform: transform };
-}
-
-function octetsMultiLineChart(splitField, valueField) {
-
-  valueField = valueField || "value";
-
-  function aggregation (from, to, interval) {
-    return {
-       hosts: {
-        terms: { field: splitField },
-        aggregations: {
-          time: {
-            date_histogram: {
-              field: "@timestamp",
-              interval: interval || 'hour',
-              min_doc_count: 0,
-              extended_bounds : {
-                min: from,
-                max: to
-              }
-            },
-            aggregations: {
-              rx: { avg: { field: "rx" }},
-              tx: { avg: { field: "tx" }}
-            }
-          }
-        }
-      }
-    };
-  }
-
-  // TODO: look into calcaluting using script
-  function transform(results) {
-    var key = null, idx = null, key_as_string = null, rxValues = [], txValues = [], retVal = [];
-    var hosts = results.aggregations.hosts.buckets;
-
-    for (var i = 0; i < hosts.length; i += 1 ) {
-        key = hosts[i].key;
-
-        rxValues = [];
-        txValues = [];
-
-        for (var j = 0;  j < hosts[i].time.buckets.length - 1; j += 1) {
-          idx = j + 1;
-          key_as_string = hosts[i].time.buckets[idx].key_as_string;
-
-          rxValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
-          txValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
-        }
-        retVal.push({ key: key+" rx", values: rxValues});
-        retVal.push({ key: key+" tx", values: txValues});
-      }
-
-      return retVal;
-    }
-
-    return { aggregation: aggregation, transform: transform };
-}
-
-
-
-function packetsMultiLineChart(splitField, valueField) {
-
-  valueField = valueField || "value";
-
-  function aggregation (from, to, interval) {
-    return {
-       hosts: {
-        terms: { field: splitField },
-        aggregations: {
-          time: {
-            date_histogram: {
-              field: "@timestamp",
-              interval: interval || 'hour',
-              min_doc_count: 0,
-              extended_bounds : {
-                min: from,
-                max: to
-              }
-            },
-            aggregations: {
-              rx: { avg: { field: "rx" }},
-              tx: { avg: { field: "tx" }}
-            }
-          }
-        }
-      }
-    };
-  }
-
-  // TODO: look into calcaluting using script
-  function transform(results) {
-    var key = null, idx = null, key_as_string = null, rxValues = [], txValues = [], retVal = [];
-    var hosts = results.aggregations.hosts.buckets;
-
-    for (var i = 0; i < hosts.length; i += 1 ) {
-        key = hosts[i].key;
-
-        rxValues = [];
-        txValues = [];
-
-        for (var j = 0;  j < hosts[i].time.buckets.length - 1; j += 1) {
-          idx = j + 1;
-          key_as_string = hosts[i].time.buckets[idx].key_as_string;
-
-          rxValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
-          txValues.push({x: key_as_string, y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
-        }
-        retVal.push({ key: key+" rx", values: rxValues});
-        retVal.push({ key: key+" tx", values: txValues});
-      }
-
-      return retVal;
-    }
-
-    return { aggregation: aggregation, transform: transform };
-}
-
 function sum(aggs, unit) {
 
   function aggregation () {
     return {
-      "time": aggs
+      time: aggs
     };
   }
 
@@ -380,8 +145,8 @@ function pieChart(field) {
 
   function aggregation () {
     return {
-      "slices": { terms: { field: field } }
-    }
+      slices: { terms: { field: field } }
+    };
   }
 
   function transform(results) {
@@ -397,7 +162,7 @@ function table(x, y) {
 
   function aggregation () {
     return {
-      "x": {
+      x: {
         terms: { field: x },
         aggregations: {
           y: {
@@ -422,7 +187,7 @@ function table(x, y) {
       var row = {};
       row[x] = xBucket.key;
       xBucket.y.buckets.forEach(function (yBucket) {
-        if (!i) keys.push(yBucket.key);
+        if (!i) { keys.push(yBucket.key); }
         row[yBucket.key] = yBucket.sum.value;
       });
       rows.push(row);
@@ -431,7 +196,7 @@ function table(x, y) {
     return { keys: keys, rows: rows };
   }
 
-  return { aggregation: aggregation, transform: transform }
+  return { aggregation: aggregation, transform: transform };
 }
 
 function aggregation(type, aggs, terms, filters) {
@@ -467,20 +232,15 @@ module.exports = {
   errorMessage: aggregation("syslog", pieChart("error_message")),
   errorReason: aggregation("syslog", pieChart("error_reason")),
 
-  //cpu: aggregation("collectd", multiLineChart("type_instance"), { plugin: "cpu" }),
-  cpu: aggregation("collectd", cpuMultiLineChart("host"), { plugin: "cpu" },
+  cpu: aggregation("collectd", cpu.multiLineChart("host"), { plugin: "cpu" },
     { "user"  : {term : {"type_instance" : "user"}},"nice"  : {term : {"type_instance" : "nice"}},
                   "system": {term : {"type_instance" : "system"}}, "idle"  : {term : {"type_instance" : "idle"}}}),
-  //memory: aggregation("collectd", multiLineChart("type_instance"), { plugin: "memory" }),
-  memory: aggregation("collectd", memoryMultiLineChart("host"), { plugin: "memory" },
+  memory: aggregation("collectd", memory.multiLineChart("host"), { plugin: "memory" },
     { "used"  : {term : {"type_instance" : "used"}},"free"  : {term : {"type_instance" : "free"}}}),
   swap: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "swap" }),
 
-  // TODO figure out what to do with "tx" and "rx" values
-  //interfacesOctets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_octets" }),
-  interfacesOctets: aggregation("collectd", octetsMultiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" }),
-  //interfacesPackets: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_packets" }),
-  interfacesPackets: aggregation("collectd", packetsMultiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" }),
+  interfacesOctets: aggregation("collectd", octets.multiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" }),
+  interfacesPackets: aggregation("collectd", packets.multiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" }),
   interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_errors" }),
 
   connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" }),
