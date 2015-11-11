@@ -15,3 +15,7 @@ on('ElasticAggregation', function (params) {
   var query = params.query, aggregation = aggs[query](params);
   return es.search(aggregation.options).then(aggregation.transform);
 });
+
+on('ElasticAddCommand', function(record){
+  return es.create(record);
+});
