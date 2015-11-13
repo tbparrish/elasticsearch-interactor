@@ -1,7 +1,8 @@
 var cpu = require('./aggregators/cpu'),
     memory = require('./aggregators/memory'),
     octets = require('./aggregators/octets'),
-    packets = require('./aggregators/packets');
+    packets = require('./aggregators/packets'),
+    responseTime = require('./aggregators/responseTime');
 
 var moment = require('moment');
 
@@ -217,11 +218,8 @@ function aggregation(type, aggs, terms, filters) {
 
 module.exports = {
 
-  responseTime: aggregation("syslog", lineChart({
-    avg: {
-      field: "response_time_ms"
-    }
-  })),
+  responseTime: aggregation("syslog",
+    responseTime.multiLineChart("host", {avg: { field: "response_time_ms"}})),
 
   signatures: aggregation("syslog", lineChart({
     max: {
