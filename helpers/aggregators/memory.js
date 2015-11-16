@@ -1,7 +1,4 @@
-function multiLineChart(splitField, valueField) {
-
-  valueField = valueField || "value";
-
+function multiLineChart(splitField) {
   function aggregation (from, to, interval, filters) {
     return {
       hosts: {
@@ -23,7 +20,7 @@ function multiLineChart(splitField, valueField) {
                   }
                 },
                 aggregations: {
-                  stat: { avg: { field: valueField }}
+                  stat: { avg: { field: "value" }}
                 }
               }
             }
@@ -41,24 +38,24 @@ function multiLineChart(splitField, valueField) {
 
   // TODO: look into calcaluting using script
   function transformMemoryStats(buckets) {
-    var key = "",
-        usedMemory = 0,
-        totalMemory = 0,
-        stats = [];
+    var key = "", usedMemory = 0, i = 0, totalMemory = 0, stats = [];
 
-    for (var i = 0; i < buckets.used.time.buckets.length; i += 1) {
-      key = buckets.used.time.buckets[i].key_as_string;
-      usedMemory = buckets.used.time.buckets[i].stat.value;
-      totalMemory = buckets.used.time.buckets[i].stat.value +
-                        buckets.free.time.buckets[i].stat.value;
+    for (i = 0; i < buckets.used.time.buckets.length; i += 1) {
 
-      stats.push({x: key, y: (usedMemory/totalMemory)*100});
+      // filter falsy data from calculation.
+      if(buckets.used.time.buckets[i].stat.value && buckets.free.time.buckets[i].stat.value) {
+        key = buckets.used.time.buckets[i].key_as_string;
+
+        usedMemory = buckets.used.time.buckets[i].stat.value;
+
+        totalMemory = buckets.used.time.buckets[i].stat.value +
+                      buckets.free.time.buckets[i].stat.value;
+
+        stats.push({x: key, y: (usedMemory/totalMemory)*100});
+      }
     }
-
     return stats;
   }
-
-
   return { aggregation: aggregation, transform: transform };
 }
 

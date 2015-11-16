@@ -1,5 +1,4 @@
-function multiLineChart(splitField, aggs) {
-
+function multiLineChart(splitField, _aggs) {
   function aggregation(from, to, interval) {
     return {
       hosts: {
@@ -18,7 +17,7 @@ function multiLineChart(splitField, aggs) {
               }
             },
             aggregations: {
-              stat: aggs
+              stat: _aggs
             }
           }
         }

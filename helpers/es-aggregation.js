@@ -1,8 +1,7 @@
 var cpu = require('./aggregators/cpu'),
     memory = require('./aggregators/memory'),
-    octets = require('./aggregators/octets'),
-    packets = require('./aggregators/packets'),
-    responseTime = require('./aggregators/responseTime');
+    responseTime = require('./aggregators/responseTime'),
+    interfaces = require('./aggregators/interfaces');
 
 var moment = require('moment');
 
@@ -231,15 +230,18 @@ module.exports = {
   errorReason: aggregation("syslog", pieChart("error_reason")),
 
   cpu: aggregation("collectd", cpu.multiLineChart("host"), { plugin: "cpu" },
-    { "user"  : {term : {"type_instance" : "user"}},"nice"  : {term : {"type_instance" : "nice"}},
-                  "system": {term : {"type_instance" : "system"}}, "idle"  : {term : {"type_instance" : "idle"}}}),
-  memory: aggregation("collectd", memory.multiLineChart("host"), { plugin: "memory" },
-    { "used"  : {term : {"type_instance" : "used"}},"free"  : {term : {"type_instance" : "free"}}}),
-  swap: aggregation("collectd", multiLineChart("plugin_instance"), { plugin: "swap" }),
+    {user: {term: {type_instance: "user"}}, nice: {term: {type_instance: "nice"}},
+                  system: {term: {type_instance: "system"}}, idle: {term: {type_instance: "idle"}}}),
+  memory: aggregation("collectd", memory.multiLineChart("host"), {plugin: "memory" },
+    {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
+  swap: aggregation("collectd", multiLineChart("plugin_instance"), {plugin: "swap" }),
 
-  interfacesOctets: aggregation("collectd", octets.multiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" }),
-  interfacesPackets: aggregation("collectd", packets.multiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" }),
-  interfacesErrors: aggregation("collectd", multiLineChart("plugin_instance", "rx"), { plugin: "interface", collectd_type: "if_errors" }),
+  interfacesOctets: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" },
+    {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
+  interfacesPackets: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" },
+    {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
+  interfacesErrors: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_errors" },
+    {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
 
   connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" }),
 

@@ -1,7 +1,4 @@
-function multiLineChart(splitField, valueField) {
-
-  valueField = valueField || "value";
-
+function multiLineChart(splitField) {
   function aggregation (from, to, interval, filters) {
     return {
        hosts: {
@@ -23,7 +20,7 @@ function multiLineChart(splitField, valueField) {
                   }
                 },
                 aggregations: {
-                  stat: { avg: { field: valueField }}
+                  stat: { avg: { field: "value" }}
                 }
               }
             }
@@ -41,23 +38,29 @@ function multiLineChart(splitField, valueField) {
 
   // TODO: look into calcaluting using script
   function transformCpuStats(buckets) {
-    var key = "",
-        idle = 0,
-        tempValue = 0,
-        stats = [];
+    var key = "", i = 0, idle = 0, tempValue = 0, stats = [];
 
-      for (var i = 0; i < buckets.user.time.buckets.length; i += 1) {
-        key = buckets.user.time.buckets[i].key_as_string;
-        idle = buckets.idle.time.buckets[i].stat.value;
-        tempValue = buckets.user.time.buckets[i].stat.value +
-                   buckets.nice.time.buckets[i].stat.value +
-                   buckets.system.time.buckets[i].stat.value;
+      for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
 
-        stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
+        // filter falsy data from calculation.
+        if( buckets.idle.time.buckets[i].stat.value &&
+            buckets.user.time.buckets[i].stat.value &&
+            buckets.nice.time.buckets[i].stat.value &&
+            buckets.system.time.buckets[i].stat.value) {
+
+          key = buckets.user.time.buckets[i].key_as_string;
+
+          idle = buckets.idle.time.buckets[i].stat.value;
+
+          tempValue = buckets.user.time.buckets[i].stat.value +
+                     buckets.nice.time.buckets[i].stat.value +
+                     buckets.system.time.buckets[i].stat.value;
+
+          stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
+        }
       }
       return stats;
     }
-
   return { aggregation: aggregation, transform: transform };
 }
 
