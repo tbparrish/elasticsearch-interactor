@@ -41,23 +41,15 @@ function multiLineChart(splitField) {
     var key = "", i = 0, idle = 0, tempValue = 0, stats = [];
 
       for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
+        key = buckets.user.time.buckets[i].key_as_string;
 
-        // filter falsy data from calculation.
-        if( buckets.idle.time.buckets[i].stat.value &&
-            buckets.user.time.buckets[i].stat.value &&
-            buckets.nice.time.buckets[i].stat.value &&
-            buckets.system.time.buckets[i].stat.value) {
+        idle = buckets.idle.time.buckets[i].stat.value;
 
-          key = buckets.user.time.buckets[i].key_as_string;
+        tempValue = buckets.user.time.buckets[i].stat.value +
+                   buckets.nice.time.buckets[i].stat.value +
+                   buckets.system.time.buckets[i].stat.value;
 
-          idle = buckets.idle.time.buckets[i].stat.value;
-
-          tempValue = buckets.user.time.buckets[i].stat.value +
-                     buckets.nice.time.buckets[i].stat.value +
-                     buckets.system.time.buckets[i].stat.value;
-
-          stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
-        }
+        stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
       }
       return stats;
     }

@@ -208,7 +208,7 @@ function aggregation(type, aggs, terms, filters) {
 
     var options = constructOptions(type, {
       query: constructFilter(fromIso, toIso, params.hostnames, terms),
-      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters)
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.hostnames)
     });
 
     return { options: options, transform: aggs.transform };
@@ -232,10 +232,10 @@ module.exports = {
   cpu: aggregation("collectd", cpu.multiLineChart("host"), { plugin: "cpu" },
     {user: {term: {type_instance: "user"}}, nice: {term: {type_instance: "nice"}},
                   system: {term: {type_instance: "system"}}, idle: {term: {type_instance: "idle"}}}),
-  memory: aggregation("collectd", memory.multiLineChart("host"), {plugin: "memory" },
+  memory: aggregation("collectd", memory.multiLineChart(), {plugin: "memory" },
     {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
-  swap: aggregation("collectd", multiLineChart("plugin_instance"), {plugin: "swap" }),
-
+  swap: aggregation("collectd", memory.multiLineChart(), {plugin: "swap" },
+      {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
   interfacesOctets: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" },
     {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
   interfacesPackets: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" },
