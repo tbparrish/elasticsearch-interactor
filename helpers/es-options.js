@@ -63,9 +63,9 @@ function constructSearchOptions(query) {
       }
   }
 
-  if (hostname) {
+  if (hostname && hostname.length) {
     filters.push({
-      term: {
+      terms: {
         hostname: hostname
       }
     })
