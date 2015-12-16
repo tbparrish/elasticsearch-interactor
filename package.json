@@ -10,7 +10,7 @@
     "ci-test": "mocha --reporter mocha-tap-reporter > test.tap",
     "ci-lint": "jshint . --exclude-path=.gitignore --reporter=checkstyle > checkstyle-result.xml",
     "start": "node index.js",
-    "obfuscate": "obfuscator --no-color --out elasticsearch-interactor.js --entry index.js index.js handlers/*.js helpers/*.js",
+    "obfuscate": "./bin/obfuscate.sh",
     "test": "mocha test/",
     "build": "exit 0"
   },
