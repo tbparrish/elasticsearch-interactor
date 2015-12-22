@@ -1,7 +1,8 @@
 var cpu = require('./aggregators/cpu'),
     memory = require('./aggregators/memory'),
     responseTime = require('./aggregators/responseTime'),
-    interfaces = require('./aggregators/interfaces');
+    interfaces = require('./aggregators/interfaces'),
+    ksi = require('./aggregators/ksi');
 
 var moment = require('moment');
 
@@ -15,7 +16,7 @@ function constructOptions(type, body) {
   };
 }
 
-function constructFilter(fromIso, toIso, hostnames, extraTerms) {
+function constructFilter(fromIso, toIso, hostnames, extraTerms, shouldTerms) {
   var shouldFilters = [];
 
   var mustFilters = [{
@@ -41,6 +42,14 @@ function constructFilter(fromIso, toIso, hostnames, extraTerms) {
       });
     } else {
       shouldFilters.push({ term: { host: hostnames }});
+    }
+  }
+
+  if(shouldTerms) {
+    if(shouldTerms.length > 0) {
+      shouldTerms.map(function(shouldTerm) {
+          var obj = {}; obj = shouldTerm; shouldFilters.push({ term: obj });
+      });
     }
   }
 
@@ -199,7 +208,7 @@ function table(x, y) {
   return { aggregation: aggregation, transform: transform };
 }
 
-function aggregation(type, aggs, terms, filters) {
+function aggregation(type, aggs, terms, filters, shouldTerms) {
 
   return function(params) {
 
@@ -207,7 +216,7 @@ function aggregation(type, aggs, terms, filters) {
         toIso = moment(params.to).utc().toISOString();
 
     var options = constructOptions(type, {
-      query: constructFilter(fromIso, toIso, params.hostnames, terms),
+      query: constructFilter(fromIso, toIso, params.hostnames, terms, shouldTerms),
       aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.hostnames)
     });
 
@@ -216,6 +225,11 @@ function aggregation(type, aggs, terms, filters) {
 }
 
 module.exports = {
+  ksiErrors: aggregation("syslog", ksi.multiLineChart("host", "KSI Service Errors"), {type: "syslog" }, null,
+    [{"syslog_severity": "emergency"}, {"syslog_severity": "alert"}, {"syslog_severity": "critical"}, {"syslog_severity": "error"}] ),
+
+  ksiWarnings: aggregation("syslog", ksi.multiLineChart("host", "KSI Service Warnings"), {type: "syslog"}, null,
+    [{"syslog_severity": "warning"}] ),
 
   responseTime: aggregation("syslog",
     responseTime.multiLineChart("host", {avg: { field: "response_time_ms"}})),
