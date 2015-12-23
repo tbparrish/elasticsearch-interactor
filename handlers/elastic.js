@@ -2,7 +2,29 @@ var esClient = require('../helpers/es-client'),
     constructOptions = require('../helpers/es-options'),
     aggs = require('../helpers/es-aggregation');
 
-var es = esClient(config.elastic);
+var es; // Elasticsearch client
+
+var elasticConnectFromSettings = function(){
+  query('SystemPropertiesGet', {props: "settings"}).then(function(settings){
+    // TODO: This is silly, why arent we returning the actual object here.
+    settings = JSON.parse(settings.settings);
+
+    var hostname = settings.deployment.elasticsearch.hostname;
+    var port = settings.deployment.elasticsearch.port;
+
+    if (!hostname || !port) throw new Error('missing host/port for elasticsearch in settings');
+
+    es = esClient(hostname + ":" + port);
+  }).catch(function(err){
+    console.log(err);
+    console.log("Invalid elasticsearch settings, using default");
+    es = esClient(config.elastic);
+  })
+}
+
+on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
+on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
+elasticConnectFromSettings();
 
 on('ElasticQuery', function (query) {
   var searchOptions = constructOptions(query);
