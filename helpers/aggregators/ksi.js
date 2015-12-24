@@ -30,6 +30,7 @@ function multiLineChart(splitField, key) {
   }
 
   function transform(results) {
+    var retVal = [];
     var values = [];
     var buckets = results.aggregations.hosts.buckets;
 
@@ -44,7 +45,9 @@ function multiLineChart(splitField, key) {
       }
     }
 
-    return {key: key, values: values};
+    retVal.push({key: key, values: values});
+
+    return retVal;
   }
 
   function getLastMessage(buckets) {
