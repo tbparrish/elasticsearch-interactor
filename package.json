@@ -7,12 +7,18 @@
   },
   "description": "Log search, pagination and aggregation service",
   "scripts": {
+    "ci-test": "mocha --reporter mocha-tap-reporter > test.tap",
+    "ci-lint": "jshint --reporter=checkstyle index.js handlers/*.js models/*.js > checkstyle-result.xml",
     "start": "node index.js",
     "test": "mocha test/",
     "build": "exit 0"
   },
   "author": "rhodri@gmail.com",
-  "devDependencies": {},
+  "devDependencies": {
+    "jshint": "^2.8.0",
+    "mocha": "^2.3.4",
+    "mocha-tap-reporter": "^0.1.3"
+  },
   "dependencies": {
     "elasticsearch": "^4.1.0",
     "moment": "^2.10.3",
