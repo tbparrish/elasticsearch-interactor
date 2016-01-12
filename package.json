@@ -8,7 +8,7 @@
   "description": "Log search, pagination and aggregation service",
   "scripts": {
     "ci-test": "mocha --reporter mocha-tap-reporter > test.tap",
-    "ci-lint": "jshint --reporter=checkstyle index.js handlers/*.js models/*.js > checkstyle-result.xml",
+    "ci-lint": "jshint . --exclude-path=.gitignore --reporter=checkstyle > checkstyle-result.xml",
     "start": "node index.js",
     "test": "mocha test/",
     "build": "exit 0"
