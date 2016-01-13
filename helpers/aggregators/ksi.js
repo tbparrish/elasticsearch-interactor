@@ -45,6 +45,15 @@ function multiLineChart(splitField, key) {
       }
     }
 
+    if(buckets.length === 0) {
+      values.push({
+        x: "No "+key,
+        y: buckets.length,
+        tooltipTitle: "No "+key,
+        tooltipContent: "There are no "+key
+      });
+    }
+
     retVal.push({key: key, values: values});
 
     return retVal;
