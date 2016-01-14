@@ -36,11 +36,19 @@ function multiLineChart(splitField) {
 
           key_as_string = hosts[i].time.buckets[idx].key_as_string;
 
-          rxValues.push({x: key_as_string,
-            y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
+          if((hosts[i].time.buckets[idx].rx.value !== null) && (hosts[i].time.buckets[j].rx.value !== null)) {
+            if((hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value) > 0) {
+              rxValues.push({x: key_as_string,
+                y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
+            }
+          }
 
-          txValues.push({x: key_as_string,
-            y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
+          if((hosts[i].time.buckets[idx].tx.value !== null) && (hosts[i].time.buckets[j].tx.value !== null)) {
+            if((hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value) > 0) {
+              txValues.push({x: key_as_string,
+                y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
+            }
+          }
 
         }
         retVal.push({ key: key+" rx", values: rxValues});
