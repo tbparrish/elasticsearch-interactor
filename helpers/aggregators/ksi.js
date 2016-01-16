@@ -1,4 +1,4 @@
-function multiLineChart(splitField, key) {
+function multiLineChart(splitField, key, filters) {
   function aggregation(from, to, interval) {
     return {
       hosts: {
@@ -6,20 +6,27 @@ function multiLineChart(splitField, key) {
           field: splitField
         },
         aggregations: {
-          time: {
-            date_histogram: {
-              field: "@timestamp",
-              interval: interval || 'hour',
-              min_doc_count: 0,
-              extended_bounds: {
-                min: from,
-                max: to
-              }
+          messages: {
+            filters: {
+              filters: filters
             },
             aggregations: {
-              message: {
-                terms: {
-                  field: "message"
+              time: {
+                date_histogram: {
+                  field: "@timestamp",
+                  interval: interval || 'hour',
+                  min_doc_count: 0,
+                  extended_bounds: {
+                    min: from,
+                    max: to
+                  }
+                },
+                aggregations: {
+                  message: {
+                    terms: {
+                      field: "message"
+                    }
+                  }
                 }
               }
             }
@@ -32,23 +39,71 @@ function multiLineChart(splitField, key) {
   function transform(results) {
     var retVal = [];
     var values = [];
-    var buckets = results.aggregations.hosts.buckets;
+    var hostBuckets = results.aggregations.hosts.buckets;
 
-    for(var i = 0; i < buckets.length; i++) {
-      if(buckets[i].doc_count > 0) {
-        values.push({
-          x: buckets[i].key,
-          y: buckets[i].doc_count,
-          tooltipTitle: buckets[i].key,
-          tooltipContent: getLastMessage(buckets[i].time.buckets)
-        });
+    for(var i = 0; i < hostBuckets.length; i += 1) {
+      var hostName = hostBuckets[i].key;
+      var lastMessage = "";
+
+      if(key === "KSI Service Errors") {
+        if((hostBuckets[i].messages.buckets.emergency.doc_count === 0) &&
+           (hostBuckets[i].messages.buckets.alert.doc_count === 0) &&
+           (hostBuckets[i].messages.buckets.critical.doc_count === 0) &&
+           (hostBuckets[i].messages.buckets.error.doc_count === 0)) {
+             values.push({
+               x: hostName,
+               y: 0,
+               tooltipTitle: hostName,
+               tooltipContent: "There are no "+key
+             });
+        } else {
+            var buckets;
+            if(hostBuckets[i].messages.buckets.emergency.doc_count > 0) {
+              buckets = hostBuckets[i].messages.buckets.emergency.time.buckets;
+            } else if(hostBuckets[i].messages.buckets.alert.doc_count > 0) {
+              buckets = hostBuckets[i].messages.buckets.alert.time.buckets;
+            } else if (hostBuckets[i].messages.buckets.critical.doc_count > 0) {
+              buckets = hostBuckets[i].messages.buckets.critical.time.buckets;
+            } else {
+              buckets = hostBuckets[i].messages.buckets.error.time.buckets;
+            }
+            lastMessage = getLastMessage(buckets);
+            values.push({
+              x: hostName,
+              y: (hostBuckets[i].messages.buckets.emergency.doc_count+
+                  hostBuckets[i].messages.buckets.alert.doc_count+
+                  hostBuckets[i].messages.buckets.critical.doc_count+
+                  hostBuckets[i].messages.buckets.error.doc_count),
+              tooltipTitle: hostName,
+              tooltipContent: lastMessage
+            });
+        }
+      }
+
+      if(key === "KSI Service Warnings") {
+        if(hostBuckets[i].messages.buckets.warning.doc_count === 0) {
+            values.push({
+              x: hostName,
+              y: 0,
+              tooltipTitle: hostName,
+              tooltipContent: "There are no "+key
+            });
+        } else {
+            lastMessage = getLastMessage(hostBuckets[i].messages.buckets.warning.time.buckets);
+            values.push({
+              x: hostName,
+              y: hostBuckets[i].messages.buckets.warning.doc_count,
+              tooltipTitle: hostName,
+              tooltipContent: lastMessage
+          });
+        }
       }
     }
 
-    if(buckets.length === 0) {
+    if(hostBuckets.length === 0) {
       values.push({
         x: "No "+key,
-        y: buckets.length,
+        y: hostBuckets.length,
         tooltipTitle: "No "+key,
         tooltipContent: "There are no "+key
       });
@@ -62,9 +117,10 @@ function multiLineChart(splitField, key) {
   function getLastMessage(buckets) {
     var message = "";
 
-    for(var i = 0; i < buckets.length; i++) {
-      if(buckets[i].message.buckets.length > 0) {
+    for(var i = buckets.length-1; i >= 0; i--) {
+      if(buckets[i].doc_count > 0) {
         message = buckets[i].message.buckets[0].key;
+        return message;
       }
     }
 

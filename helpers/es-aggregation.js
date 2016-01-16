@@ -225,14 +225,19 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
 }
 
 module.exports = {
-  ksiErrors: aggregation("syslog", ksi.multiLineChart("host", "KSI Service Errors"), {type: "syslog" }, null,
-    [{"syslog_severity": "emergency"}, {"syslog_severity": "alert"}, {"syslog_severity": "critical"}, {"syslog_severity": "error"}] ),
+  ksiErrors: aggregation("syslog", ksi.multiLineChart("hostname", "KSI Service Errors",
+    { emergency: { term: { syslog_severity: "emergency" }},
+      alert: { term: { syslog_severity: "alert" }},
+      critical: {term: { syslog_severity: "critical"}},
+      error: {term: {syslog_severity: "error"}}}),
+      {type: "syslog"}),
 
-  ksiWarnings: aggregation("syslog", ksi.multiLineChart("host", "KSI Service Warnings"), {type: "syslog"}, null,
-    [{"syslog_severity": "warning"}] ),
+  ksiWarnings: aggregation("syslog", ksi.multiLineChart("hostname", "KSI Service Warnings",
+    { warning: { term: { syslog_severity: "warning" }}}),
+    {type: "syslog"}),
 
   responseTime: aggregation("syslog",
-    responseTime.multiLineChart("host", {avg: { field: "response_time_ms"}})),
+    responseTime.multiLineChart("hostname", {avg: { field: "response_time_ms"}})),
 
   signatures: aggregation("syslog", lineChart({
     max: {
