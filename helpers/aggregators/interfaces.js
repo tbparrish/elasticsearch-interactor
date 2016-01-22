@@ -1,3 +1,4 @@
+var hasHostBuckets = require("../utils").hasHostBuckets;
 function multiLineChart(splitField) {
   function aggregation (from, to, interval, _aggs) {
     return {
@@ -24,6 +25,8 @@ function multiLineChart(splitField) {
   // TODO: look into calcaluting using script
   function transform(results) {
     var key = "", idx = 0, key_as_string = "", i = 0, xValues = [], txValues = [], retVal = [];
+    if (!hasHostBuckets(results))
+      return [];
     var hosts = results.aggregations.hosts.buckets;
 
     for (i = 0; i < hosts.length; i += 1) {

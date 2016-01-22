@@ -1,3 +1,4 @@
+var hasHostBuckets = require("../utils").hasHostBuckets;
 function multiLineChart() {
   function aggregation (from, to, interval, filters, hostnames) {
     var isSingleHostAgg = false;
@@ -84,6 +85,8 @@ function multiLineChart() {
         })};
       });
     } else { // transform for multiple hosts
+      if (!hasHostBuckets(results))
+        return [];
       return results.aggregations.hosts.buckets.map(function (host) {
         return {key : host.key, values : transformMemoryStats(host.stats.buckets)};
       });
