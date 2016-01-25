@@ -2,7 +2,11 @@ var cpu = require('./aggregators/cpu'),
     memory = require('./aggregators/memory'),
     responseTime = require('./aggregators/responseTime'),
     interfaces = require('./aggregators/interfaces'),
-    ksi = require('./aggregators/ksi');
+    ksi = require('./aggregators/ksi'),
+    hasLinesBuckets = require('./utils').hasLinesBuckets,
+    hasTimeBuckets = require('./utils').hasTimeBuckets,
+    hasXBuckets = require('./utils').hasXBuckets,
+    hasSlicesBuckets = require('./utils').hasSlicesBuckets;
 
 var moment = require('moment');
 
@@ -86,6 +90,8 @@ function lineChart(aggs) {
   }
 
   function transform(results) {
+    if(!hasTimeBuckets(results))
+      return [];
     return [{
       values: results.aggregations.time.buckets.map(function (bucket) {
         return { x: bucket.key_as_string, y: bucket.yAxis.value };
@@ -125,6 +131,8 @@ function multiLineChart(splitField, valueField) {
   }
 
   function transform(results) {
+    if(!hasLinesBuckets(results))
+      return [];
     return results.aggregations.lines.buckets.map(function (line) {
       return { key: line.key, values: line.time.buckets.map(function (bucket) {
         return { x: bucket.key_as_string, y: bucket.yAxis.value };
@@ -144,6 +152,8 @@ function sum(aggs, unit) {
   }
 
   function transform(results) {
+    if(!hasTimeBuckets(results))
+      return [];
     return { value: results.aggregations.time.value, unit: unit };
   }
 
@@ -159,6 +169,8 @@ function pieChart(field) {
   }
 
   function transform(results) {
+    if(!hasSlicesBuckets(results))
+      return [];
     return results.aggregations.slices.buckets.map(function (bucket) {
       return { x: bucket.key, y: bucket.doc_count };
     });
@@ -190,6 +202,8 @@ function table(x, y) {
   }
 
   function transform(results) {
+    if(!hasXBuckets(results))
+      return [];
     var keys = [ x ];
     var rows = [];
     results.aggregations.x.buckets.forEach(function (xBucket, i) {
@@ -221,7 +235,7 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
     });
 
     return { options: options, transform: aggs.transform };
-  }
+  };
 }
 
 module.exports = {

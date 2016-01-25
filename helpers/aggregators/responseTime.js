@@ -1,4 +1,4 @@
-var hasHostBuckets = require("../utils").hasHostBuckets;
+var hasHostsBuckets = require("../utils").hasHostsBuckets;
 function multiLineChart(splitField, _aggs) {
   function aggregation(from, to, interval) {
     return {
@@ -27,7 +27,7 @@ function multiLineChart(splitField, _aggs) {
   }
 
   function transform(results) {
-    if (!hasHostBuckets(results))
+    if (!hasHostsBuckets(results))
       return [];
     return results.aggregations.hosts.buckets.map(function(host) {
       return {
