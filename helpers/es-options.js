@@ -68,7 +68,7 @@ function constructSearchOptions(query) {
       terms: {
         hostname: hostname
       }
-    })
+    });
   }
 
   var filterQuery = constructQuery(filters),

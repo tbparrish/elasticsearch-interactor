@@ -239,19 +239,19 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
 }
 
 module.exports = {
-  ksiErrors: aggregation("syslog", ksi.multiLineChart("hostname", "KSI Service Errors",
+  ksiErrors: aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Errors",
     { emergency: { term: { syslog_severity: "emergency" }},
       alert: { term: { syslog_severity: "alert" }},
       critical: {term: { syslog_severity: "critical"}},
       error: {term: {syslog_severity: "error"}}}),
       {type: "syslog"}),
 
-  ksiWarnings: aggregation("syslog", ksi.multiLineChart("hostname", "KSI Service Warnings",
+  ksiWarnings: aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Warnings",
     { warning: { term: { syslog_severity: "warning" }}}),
     {type: "syslog"}),
 
   responseTime: aggregation("syslog",
-    responseTime.multiLineChart("hostname", {avg: { field: "response_time_ms"}})),
+    responseTime.multiLineChart("appliance_ip", {avg: { field: "response_time_ms"}})),
 
   signatures: aggregation("syslog", lineChart({
     max: {
@@ -262,18 +262,18 @@ module.exports = {
   errorMessage: aggregation("syslog", pieChart("error_message")),
   errorReason: aggregation("syslog", pieChart("error_reason")),
 
-  cpu: aggregation("collectd", cpu.multiLineChart("host"), { plugin: "cpu" },
+  cpu: aggregation("collectd", cpu.multiLineChart("appliance_ip"), { plugin: "cpu" },
     {user: {term: {type_instance: "user"}}, nice: {term: {type_instance: "nice"}},
                   system: {term: {type_instance: "system"}}, idle: {term: {type_instance: "idle"}}}),
   memory: aggregation("collectd", memory.multiLineChart(), {plugin: "memory" },
     {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
   swap: aggregation("collectd", memory.multiLineChart(), {plugin: "swap" },
       {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
-  interfacesOctets: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_octets" },
+  interfacesOctets: aggregation("collectd", interfaces.multiLineChart("appliance_ip"), { plugin: "interface", collectd_type: "if_octets" },
     {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
-  interfacesPackets: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_packets" },
+  interfacesPackets: aggregation("collectd", interfaces.multiLineChart("appliance_ip"), { plugin: "interface", collectd_type: "if_packets" },
     {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
-  interfacesErrors: aggregation("collectd", interfaces.multiLineChart("host"), { plugin: "interface", collectd_type: "if_errors" },
+  interfacesErrors: aggregation("collectd", interfaces.multiLineChart("appliance_ip"), { plugin: "interface", collectd_type: "if_errors" },
     {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
 
   connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" }),
