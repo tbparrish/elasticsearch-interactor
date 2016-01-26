@@ -20,7 +20,7 @@ function constructOptions(type, body) {
   };
 }
 
-function constructFilter(fromIso, toIso, hostnames, extraTerms, shouldTerms) {
+function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms) {
   var shouldFilters = [];
 
   var mustFilters = [{
@@ -39,13 +39,13 @@ function constructFilter(fromIso, toIso, hostnames, extraTerms, shouldTerms) {
     });
   }
 
-  if(hostnames) {
-    if(Array.isArray(hostnames)) {
-      hostnames.map(function(hostname) {
-          var obj = {}; obj.host = hostname; shouldFilters.push({ term: obj });
+  if(appliance_ips) {
+    if(Array.isArray(appliance_ips)) {
+      appliance_ips.map(function(appliance_ip) {
+          var obj = {}; obj.host = appliance_ip; shouldFilters.push({ term: obj });
       });
     } else {
-      shouldFilters.push({ term: { host: hostnames }});
+      shouldFilters.push({ term: { host: appliance_ips }});
     }
   }
 
@@ -230,8 +230,8 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
         toIso = moment(params.to).utc().toISOString();
 
     var options = constructOptions(type, {
-      query: constructFilter(fromIso, toIso, params.hostnames, terms, shouldTerms),
-      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.hostnames)
+      query: constructFilter(fromIso, toIso, params.appliance_ips, terms, shouldTerms),
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.appliance_ips)
     });
 
     return { options: options, transform: aggs.transform };
