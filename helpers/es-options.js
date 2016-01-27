@@ -51,14 +51,10 @@ function constructSearchOptions(query) {
 
   for (var term in additionalFilters) {
       if (additionalFilters.hasOwnProperty(term)) {
-          var query = additionalFilters[term];
-          var field = term;
-
-          var q = {};
-          q[field] = query;
+          var filter = additionalFilters[term];
 
           filters.push({
-              term: q
+              term: filter
           });
       }
   }
