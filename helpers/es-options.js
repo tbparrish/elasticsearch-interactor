@@ -4,6 +4,7 @@ var moment = require('moment');
 require('moment-range');
 
 function constructQuery(mustFilters, shouldFilters) {
+
   if(shouldFilters.length === 0) {
     return {
       filtered: {
