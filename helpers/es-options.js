@@ -3,16 +3,30 @@ var moment = require('moment');
 // Add range() function on to moment()
 require('moment-range');
 
-function constructQuery(filters) {
-  return {
-    filtered: {
-      filter: {
-        bool: {
-          must: filters
+function constructQuery(mustFilters, shouldFilters) {
+
+  if(shouldFilters.length === 0) {
+    return {
+      filtered: {
+        filter: {
+          bool: {
+            must: mustFilters
+          }
         }
       }
-    }
-  };
+    };
+  } else {
+    return {
+      filtered: {
+        filter: {
+          bool: {
+            must: mustFilters,
+            should: shouldFilters
+          }
+        }
+      }
+    };
+  }
 }
 
 function constructSort(sortUrlParam) {
@@ -27,18 +41,20 @@ function constructSort(sortUrlParam) {
 
 function constructSearchOptions(query) {
 
-  var filters = [],
+  var mustFilters = [],
+      shouldFilters = [],
       from = query.from,
       to = query.to,
       hostname = query.hostname,
-      additionalFilters = query.filters;
+      mFilters = query.mustFilters,
+      sFilters = query.shouldFilters;
 
   if (from && to) {
 
     var fromMoment = moment(from).utc(),
         toMoment = moment(to).utc();
 
-    filters.push({
+    mustFilters.push({
       range: {
         "@timestamp": {
           gte: fromMoment.toISOString(),
@@ -49,16 +65,22 @@ function constructSearchOptions(query) {
     });
   }
 
-  for (var term in additionalFilters) {
-      if (additionalFilters.hasOwnProperty(term)) {
-          var query = additionalFilters[term];
-          var field = term;
+  for (var mterm in mFilters) {
+      if (mFilters.hasOwnProperty(mterm)) {
+          var mfilter = mFilters[mterm];
 
-          var q = {};
-          q[field] = query;
+          mustFilters.push({
+              term: mfilter
+          });
+      }
+  }
 
-          filters.push({
-              term: q
+  for (var sterm in sFilters) {
+      if (sFilters.hasOwnProperty(sterm)) {
+          var sfilter = sFilters[sterm];
+
+          shouldFilters.push({
+              term: sfilter
           });
       }
   }
@@ -68,10 +90,10 @@ function constructSearchOptions(query) {
       terms: {
         hostname: hostname
       }
-    })
+    });
   }
 
-  var filterQuery = constructQuery(filters),
+  var filterQuery = constructQuery(mustFilters, shouldFilters),
       sort = constructSort(query.sort);
 
   var searchOptions = {

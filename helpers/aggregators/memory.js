@@ -43,7 +43,7 @@ function multiLineChart() {
     } else {
       return { // aggregation for multiple hosts
         hosts: {
-          terms: { field: "host" },
+          terms: { field: "appliance_ip" },
           aggregations : {
             stats: {
               filters: {
