@@ -45,7 +45,7 @@ function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms)
           var obj = {}; obj.host = appliance_ip; shouldFilters.push({ term: obj });
       });
     } else {
-      shouldFilters.push({ term: { host: appliance_ips }});
+      mustFilters.push({ term: { host: appliance_ips }});
     }
   }
 
@@ -239,14 +239,14 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
 }
 
 module.exports = {
-  ksiErrors: aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Errors",
+  ksiErrors: ksi.aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Errors",
     { emergency: { term: { syslog_severity: "emergency" }},
       alert: { term: { syslog_severity: "alert" }},
       critical: {term: { syslog_severity: "critical"}},
       error: {term: {syslog_severity: "error"}}}),
       {type: "syslog"}),
 
-  ksiWarnings: aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Warnings",
+  ksiWarnings: ksi.aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Warnings",
     { warning: { term: { syslog_severity: "warning" }}}),
     {type: "syslog"}),
 

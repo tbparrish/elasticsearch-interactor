@@ -1,0 +1,333 @@
+{
+  "template": "overwatch-*",
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "index.refresh_interval": "5s"
+  },
+  "mappings": {
+    "syslog": {
+      "properties": {
+        "@timestamp": {
+          "type": "date",
+          "format": "dateOptionalTime"
+        },
+        "@version": {
+          "type": "string"
+        },
+        "appliance_ip": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "connect_destination": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "connect_parent_id": {
+          "type": "double"
+        },
+        "connect_port": {
+          "type": "double"
+        },
+        "connection_destination": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "connection_destination_port": {
+          "type": "double"
+        },
+        "connection_state": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "customer_id": {
+          "type": "double"
+        },
+        "destination_device": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "destination_id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "destination_ipv4": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "destination_port": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "epoch_time": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "error_message": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "error_number": {
+          "type": "double"
+        },
+        "error_reason": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "failed_destination_id": {
+          "type": "double"
+        },
+        "failed_destination_ipv4": {
+          "type": "string"
+        },
+        "failed_port_number": {
+          "type": "double"
+        },
+        "final_set": {
+          "type": "string"
+        },
+        "first_response": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "host": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "host_ip_address": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "hostname": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "ip_address": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "logstash_received_at": {
+          "type": "date",
+          "format": "dateOptionalTime"
+        },
+        "logstash_received_from": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "message": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "message_type": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "msg_id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "new_checksum": {
+          "type": "double"
+        },
+        "nodes_online": {
+          "type": "string"
+        },
+        "number_of_requests": {
+          "type": "double"
+        },
+        "old_checksum": {
+          "type": "double"
+        },
+        "old_round": {
+          "type": "double"
+        },
+        "parent_device_id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "parent_id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "parent_ipv4": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "parent_port": {
+          "type": "double"
+        },
+        "pid": {
+          "type": "double"
+        },
+        "port": {
+          "type": "double"
+        },
+        "port_number": {
+          "type": "double"
+        },
+        "request_count": {
+          "type": "double"
+        },
+        "request_number": {
+          "type": "double"
+        },
+        "response_time_ms": {
+          "type": "double"
+        },
+        "round_number": {
+          "type": "double"
+        },
+        "round_number_sent": {
+          "type": "double"
+        },
+        "save_age": {
+          "type": "double"
+        },
+        "save_destination": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "save_state": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "signatures_requested": {
+          "type": "double"
+        },
+        "source_device": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "source_pid": {
+          "type": "double"
+        },
+        "struct_data": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "syslog_facility": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "syslog_facility_code": {
+          "type": "double"
+        },
+        "syslog_pri": {
+          "type": "double"
+        },
+        "syslog_severity": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "syslog_severity_code": {
+          "type": "double"
+        },
+        "syslog_timestamp": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "syslog_version": {
+          "type": "double",
+          "index": "not_analyzed"
+        },
+        "tags": {
+          "type": "string"
+        },
+        "timer_data": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "index": "not_analyzed"
+        }
+      }
+    },
+    "collectd": {
+      "properties": {
+        "@timestamp": {
+          "type": "date",
+          "format": "dateOptionalTime"
+        },
+        "@version": {
+          "type": "string"
+        },
+        "collectd_type": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "host": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "appliance_ip": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "in": {
+          "type": "double"
+        },
+        "doubleterm": {
+          "type": "double"
+        },
+        "majflt": {
+          "type": "double"
+        },
+        "midterm": {
+          "type": "double"
+        },
+        "minflt": {
+          "type": "double"
+        },
+        "out": {
+          "type": "double"
+        },
+        "plugin": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "plugin_instance": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "rx": {
+          "type": "double"
+        },
+        "shortterm": {
+          "type": "double"
+        },
+        "syslog_facility": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "syslog_facility_code": {
+          "type": "double"
+        },
+        "syslog_severity": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "syslog_severity_code": {
+          "type": "double"
+        },
+        "tx": {
+          "type": "double"
+        },
+        "type": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "type_instance": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "value": {
+          "type": "double"
+        }
+      }
+    }
+  }
+}

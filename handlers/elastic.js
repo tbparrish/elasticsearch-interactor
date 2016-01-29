@@ -19,8 +19,8 @@ var elasticConnectFromSettings = function(){
     console.log(err);
     console.log("Invalid elasticsearch settings, using default");
     es = esClient(config.elastic);
-  })
-}
+  });
+};
 
 on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
 on('SystemPropertyCreatedEvent', elasticConnectFromSettings);

@@ -26,9 +26,7 @@ function constructQuery(mustFilters, shouldFilters) {
         }
       }
     };
-}
-
-
+  }
 }
 
 function constructSort(sortUrlParam) {

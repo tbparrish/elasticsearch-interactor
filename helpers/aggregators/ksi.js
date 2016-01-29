@@ -1,4 +1,59 @@
 var hasHostsBuckets = require("../utils").hasHostsBuckets;
+var moment = require('moment');
+
+function constructOptions(type, body) {
+  return {
+    index: 'overwatch-*',
+    search_type: 'count',
+    type: type,
+    ignore_unavailable: true,
+    body: _(body).defaults({ size: 0 }).toObject()
+  };
+}
+
+function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms) {
+  var shouldFilters = [];
+  var mustFilters = [];
+
+  if (extraTerms) {
+    _(extraTerms).each(function (value, key) {
+      var obj = {}; obj[key] = value; mustFilters.push({ term: obj });
+    });
+  }
+
+  if(appliance_ips) {
+    if(Array.isArray(appliance_ips)) {
+      appliance_ips.map(function(appliance_ip) {
+          var obj = {}; obj.host = appliance_ip; shouldFilters.push({ term: obj });
+      });
+    } else {
+      mustFilters.push({ term: { host: appliance_ips }});
+    }
+  }
+
+  if(shouldTerms) {
+    if(shouldTerms.length > 0) {
+      shouldTerms.map(function(shouldTerm) {
+          var obj = {}; obj = shouldTerm; shouldFilters.push({ term: obj });
+      });
+    }
+  }
+
+  if((mustFilters.length > 0) && (shouldFilters.length > 0 )) {
+    return {
+      filtered: { filter: { bool: { must: mustFilters, should: shouldFilters }}}
+    };
+  } else if((mustFilters.length > 0) && (shouldFilters.length === 0 )){
+    return {
+      filtered: { filter: { bool: { must: mustFilters }}}
+    };
+  } else if((mustFilters.length === 0) && (shouldFilters.length > 0 )){
+    return {
+      filtered: { filter: { bool: { must: shouldFilters }}}
+    };
+  }
+}
+
 function multiLineChart(splitField, key, filters) {
   function aggregation(from, to, interval) {
     return {
@@ -136,6 +191,23 @@ function multiLineChart(splitField, key, filters) {
   };
 }
 
+function aggregation(type, aggs, terms, filters, shouldTerms) {
+
+  return function(params) {
+
+    var fromIso = moment(params.from).utc().toISOString(),
+        toIso = moment(params.to).utc().toISOString();
+
+    var options = constructOptions(type, {
+      query: constructFilter(fromIso, toIso, params.appliance_ips, terms, shouldTerms),
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.appliance_ips)
+    });
+
+    return { options: options, transform: aggs.transform };
+  };
+}
+
 module.exports = {
-  multiLineChart: multiLineChart
+  multiLineChart: multiLineChart,
+  aggregation: aggregation
 };
