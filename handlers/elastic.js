@@ -2,9 +2,6 @@ var esClient = require('../helpers/es-client'),
     constructOptions = require('../helpers/es-options'),
     aggs = require('../helpers/es-aggregation');
 
-var es; // Elasticsearch client
-es = esClient(config.elastic);
-
 var elasticConnectFromSettings = function(){
   query('SystemPropertiesGet', {props: "settings"}).then(function(settings){
     // TODO: This is silly, why arent we returning the actual object here.
@@ -15,30 +12,30 @@ var elasticConnectFromSettings = function(){
 
     if (!hostname || !port) throw new Error('missing host/port for elasticsearch in settings');
 
-    es = esClient(hostname + ":" + port);
+    return esClient(hostname + ":" + port);
   }).catch(function(err){
     console.log(err);
     console.log("Invalid elasticsearch settings, using default");
-    es = esClient(config.elastic);
+    return esClient(config.elastic);
+  }).then(function(es){
+    on('ElasticQuery', function (query) {
+      var searchOptions = constructOptions(query);
+      return es.search(searchOptions).then(function (results) {
+        return results.hits.hits.map(function (hit) { return hit._source; });
+      });
+    });
+
+    on('ElasticAggregation', function (params) {
+      var query = params.query, aggregation = aggs[query](params);
+      return es.search(aggregation.options).then(aggregation.transform);
+    });
+
+    on('ElasticAddCommand', function(record){
+      return es.create(record);
+    });
   });
 };
 
 on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
 on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
 elasticConnectFromSettings();
-
-on('ElasticQuery', function (query) {
-  var searchOptions = constructOptions(query);
-  return es.search(searchOptions).then(function (results) {
-    return results.hits.hits.map(function (hit) { return hit._source; });
-  });
-});
-
-on('ElasticAggregation', function (params) {
-  var query = params.query, aggregation = aggs[query](params);
-  return es.search(aggregation.options).then(aggregation.transform);
-});
-
-on('ElasticAddCommand', function(record){
-  return es.create(record);
-});
