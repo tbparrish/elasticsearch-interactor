@@ -3,6 +3,7 @@ var esClient = require('../helpers/es-client'),
     aggs = require('../helpers/es-aggregation');
 
 var es; // Elasticsearch client
+es = esClient(config.elastic);
 
 var elasticConnectFromSettings = function(){
   query('SystemPropertiesGet', {props: "settings"}).then(function(settings){

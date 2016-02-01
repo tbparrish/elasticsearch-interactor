@@ -1,5 +1,6 @@
-var hasHostsBuckets = require("../utils").hasHostsBuckets;
-var moment = require('moment');
+var hasHostsBuckets = require("../utils").hasHostsBuckets,
+    moment = require('moment'),
+    _ = require('lazy.js');
 
 function constructOptions(type, body) {
   return {

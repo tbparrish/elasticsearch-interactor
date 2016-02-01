@@ -6,7 +6,8 @@ var cpu = require('./aggregators/cpu'),
     hasLinesBuckets = require('./utils').hasLinesBuckets,
     hasTimeBuckets = require('./utils').hasTimeBuckets,
     hasXBuckets = require('./utils').hasXBuckets,
-    hasSlicesBuckets = require('./utils').hasSlicesBuckets;
+    hasSlicesBuckets = require('./utils').hasSlicesBuckets,
+    _ = require('lazy.js');
 
 var moment = require('moment');
 
