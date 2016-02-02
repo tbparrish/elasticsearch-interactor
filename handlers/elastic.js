@@ -1,12 +1,11 @@
-var esClient = require('../helpers/es-client'),
+//var esClient = require('../helpers/es-client'),
+var elasticsearch = require('elasticsearch'),
     constructOptions = require('../helpers/es-options'),
-    aggs = require('../helpers/es-aggregation'),
-    config = require('../config.json'),
-    elasticsearch = require('elasticsearch');
+    aggs = require('../helpers/es-aggregation');
 
 var es = new elasticsearch.Client({
                 host: config.elastic,
-                log: 'trace'});
+                log: 'info'});
 
 // var elasticConnectFromSettings = function(){
 //   query('SystemPropertiesGet', {props: "settings"}).then(function(settings){
