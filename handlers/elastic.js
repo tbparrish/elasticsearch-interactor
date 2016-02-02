@@ -1,7 +1,7 @@
 var esClient = require('../helpers/es-client'),
     constructOptions = require('../helpers/es-options'),
     aggs = require('../helpers/es-aggregation'),
-    config = require('../config.js'),
+    config = require('../config.json'),
     elasticsearch = require('elasticsearch');
 
 var es = new elasticsearch.Client({
