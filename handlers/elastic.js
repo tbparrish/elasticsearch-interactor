@@ -1,35 +1,54 @@
-//var esClient = require('../helpers/es-client'),
 var elasticsearch = require('elasticsearch'),
     constructOptions = require('../helpers/es-options'),
     aggs = require('../helpers/es-aggregation');
 
-var es = new elasticsearch.Client({
-                host: config.elastic,
-                log: 'info'});
+var es;
 
-// var elasticConnectFromSettings = function(){
-//   query('SystemPropertiesGet', {props: "settings"}).then(function(settings){
-//     // TODO: This is silly, why arent we returning the actual object here.
-//     settings = JSON.parse(settings.settings);
-//
-//     var hostname = settings.deployment.elasticsearch.hostname;
-//     var port = settings.deployment.elasticsearch.port;
-//
-//     if (!hostname || !port) throw new Error('missing host/port for elasticsearch in settings');
-//
-//     return esClient(hostname + ":" + port);
-//   }).catch(function(err){
-//     console.log(err);
-//     console.log("Invalid elasticsearch settings, using default");
-//     return esClient(config.elastic);
-//   }).then(function(es){
-//
-//   });
-// };
+function WinstonLogger() {
+  this.error = log.error.bind(log);
+  this.warning = log.warn.bind(log);
+  this.info = log.info.bind(log);
+  this.debug = log.debug.bind(log);
+  this.trace = function (method, requestUrl, body, responseBody, responseStatus) {
+    log.log('trace', {
+      method: method,
+      requestUrl: requestUrl,
+      body: body,
+      responseBody: responseBody,
+      responseStatus: responseStatus
+    });
+  };
+  this.close = function () { /* Winston loggers do not need to be closed */ };
+}
 
-// on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
-// on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
-// elasticConnectFromSettings();
+var elasticConnectFromSettings = function(){
+  query('SystemPropertiesGet', {props: "settings"}).then(function(settings){
+    // TODO: This is silly, why arent we returning the actual object here.
+    settings = JSON.parse(settings.settings);
+
+    var hostname = settings.deployment.elasticsearch.hostname;
+    var port = settings.deployment.elasticsearch.port;
+
+    if (!hostname || !port) throw new Error('missing host/port for elasticsearch in settings');
+
+    es =  esClient(hostname + ":" + port);
+  }).catch(function(err){
+    console.log(err);
+    console.log("Invalid elasticsearch settings, using default");
+    es =  esClient(config.elastic);
+  });
+};
+
+var esClient = function(esHost) {
+  return new elasticsearch.Client({
+    host: esHost,
+    log: WinstonLogger
+  });
+};
+
+on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
+on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
+elasticConnectFromSettings();
 
 on('ElasticQuery', function (query) {
   var searchOptions = constructOptions(query);
