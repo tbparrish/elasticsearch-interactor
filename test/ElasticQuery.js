@@ -10,7 +10,7 @@ describe("ElasticQuery", function() {
     var client;
     before(function() {
       var template = {
-        name : mapping.template,
+        name : 'template_overwatch',
         body: {
             "template" : mapping.template,
             "settings" : mapping.settings,
@@ -23,26 +23,27 @@ describe("ElasticQuery", function() {
           log: 'info'
         });
 
-        // delete indices
-        client.indices.delete({index: '*'}, function(e,r) {
-          if(e) {
-            console.log('failed to delete ElasticSearch Indices, ' + e.message);
-          } else {
-            console.log('successfully delete ElasticSearch Indices');
-          }
-
-          // create indices and mappings
-          client.indices.putTemplate(template, function(err, resp) {
-            if(err) {
-              console.log('failed to create ElasticSearch Template, ' + err.message);
-            } else {
-              console.log('successfully created ElasticSearch Template');
-            }
-          });
+        client.indices.putTemplate(template).then(function(response){
+          console.log('successfully created ElasticSearch Template');
         });
+
     });
 
     it("query elasticsearch", function(done) {
+      client.index({
+          index: 'overwatch-2016-01-20',
+          type: 'syslog',
+          body: {
+            "@timestamp": '2016-01-20T21:47:32.854Z',
+            message: 'Some random message from KSI Log Event TBD',
+            epoch_time: "1447196711.910",
+            syslog_message: "Some random message from KSI Log Event TBD",
+            message_type: 'KSI_TBD',
+          }
+        }, function (error, response) {
+
+        });
+
       client.search({
         index: 'overwatch-*',
         type: 'syslog',
@@ -84,7 +85,8 @@ describe("ElasticQuery", function() {
         }
       }).then(function (resp) {
         var hits = resp.hits.hits;
-        //console.log("HITS ==> " + JSON.stringify(hits, null, 2));
+        console.log("HITS ==> " + JSON.stringify(hits, null, 2));
+        //expect(hits.length).to.be(1);
         done();
       }, function (err) {
         console.trace(err.message);
