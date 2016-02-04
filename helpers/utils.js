@@ -26,9 +26,7 @@ function hasTimeBuckets(results) {
     typeof results.aggregations !== "undefined" &&
     results.aggregations !== null &&
     typeof results.aggregations.time !== "undefined" &&
-    results.aggregations.time !== null &&
-    typeof results.aggregations.time.buckets !== "undefined" &&
-    results.aggregations.time.buckets !== null;
+    results.aggregations.time !== null;
 }
 
 function hasXBuckets(results) {
