@@ -1,4 +1,5 @@
-var cpu = require('./aggregators/cpu'),
+var videriCPU = require('./aggregators/videriCPU'),
+    blackLanternCPU = require('./aggregators/blackLanternCPU'),
     memory = require('./aggregators/memory'),
     responseTime = require('./aggregators/responseTime'),
     interfaces = require('./aggregators/interfaces'),
@@ -263,9 +264,12 @@ module.exports = {
   errorMessage: aggregation("syslog", pieChart("error_message")),
   errorReason: aggregation("syslog", pieChart("error_reason")),
 
-  cpu: aggregation("collectd", cpu.multiLineChart("appliance_ip"), { plugin: "cpu" },
+  videriCPU: videriCPU.aggregation("collectd", videriCPU.multiLineChart("appliance_ip"), { plugin: "cpu" },
     {user: {term: {type_instance: "user"}}, nice: {term: {type_instance: "nice"}},
                   system: {term: {type_instance: "system"}}, idle: {term: {type_instance: "idle"}}}),
+  blackLanternCPU: blackLanternCPU.aggregation("syslog", blackLanternCPU.multiLineChart("appliance_ip"),
+                  {message_type: "BL_CPU_STAT"}),
+
   memory: aggregation("collectd", memory.multiLineChart(), {plugin: "memory" },
     {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
   swap: aggregation("collectd", memory.multiLineChart(), {plugin: "swap" },

@@ -65,26 +65,19 @@ function multiLineChart(splitField) {
     return {
        hosts: {
         terms: { field: splitField },
-        aggregations : {
-           stats: {
-            filters: {
-              filters: filters
+        aggregations: {
+          time: {
+            date_histogram: {
+              field: "@timestamp",
+              interval: interval || 'hour',
+              min_doc_count: 0,
+              extended_bounds : {
+                min: from,
+                max: to
+              }
             },
             aggregations: {
-              time: {
-                date_histogram: {
-                  field: "@timestamp",
-                  interval: interval || 'hour',
-                  min_doc_count: 0,
-                  extended_bounds : {
-                    min: from,
-                    max: to
-                  }
-                },
-                aggregations: {
-                  stat: { avg: { field: "value" }}
-                }
-              }
+              stat: { avg: { field: "bl_cpu_stat" }}
             }
           }
         }
@@ -96,35 +89,12 @@ function multiLineChart(splitField) {
     if (!hasHostsBuckets(results))
       return [];
     return results.aggregations.hosts.buckets.map( function (host) {
-      return { key: host.key, values: transformCpuStats(host.stats.buckets)};
+      return { key: host.key, values: host.time.buckets.map(function(bucket){
+        return {x: bucket.key_as_string, y: bucket.stat.value};
+      })};
     });
   }
 
-  // TODO: look into calcaluting using script
-  function transformCpuStats(buckets) {
-    var key = "", i = 0, idle = 0, tempValue = 0, stats = [];
-
-      for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
-        key = buckets.user.time.buckets[i].key_as_string;
-
-        if((buckets.idle.time.buckets[i].stat.value !== null) &&
-           (buckets.user.time.buckets[i].stat.value !== null) &&
-           (buckets.nice.time.buckets[i].stat.value !== null) &&
-           (buckets.system.time.buckets[i].stat.value !== null)) {
-
-          idle = buckets.idle.time.buckets[i].stat.value;
-
-          tempValue = buckets.user.time.buckets[i].stat.value +
-                     buckets.nice.time.buckets[i].stat.value +
-                     buckets.system.time.buckets[i].stat.value;
-
-          stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
-      }
-
-
-      }
-      return stats;
-    }
   return { aggregation: aggregation, transform: transform };
 }
 

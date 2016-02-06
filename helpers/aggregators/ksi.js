@@ -160,12 +160,7 @@ function multiLineChart(splitField, key, filters) {
     }
 
     if(hostBuckets.length === 0) {
-      values.push({
-        x: "No "+key,
-        y: hostBuckets.length,
-        tooltipTitle: "No "+key,
-        tooltipContent: "There are no "+key
-      });
+      return [];
     }
 
     retVal.push({key: key, values: values});

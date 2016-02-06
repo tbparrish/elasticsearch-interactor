@@ -107,11 +107,6 @@ function multiLineChart(splitField) {
       for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
         key = buckets.user.time.buckets[i].key_as_string;
 
-        if((buckets.idle.time.buckets[i].stat.value !== null) &&
-           (buckets.user.time.buckets[i].stat.value !== null) &&
-           (buckets.nice.time.buckets[i].stat.value !== null) &&
-           (buckets.system.time.buckets[i].stat.value !== null)) {
-
           idle = buckets.idle.time.buckets[i].stat.value;
 
           tempValue = buckets.user.time.buckets[i].stat.value +
@@ -119,9 +114,6 @@ function multiLineChart(splitField) {
                      buckets.system.time.buckets[i].stat.value;
 
           stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
-      }
-
-
       }
       return stats;
     }
