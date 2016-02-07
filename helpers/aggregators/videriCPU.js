@@ -34,10 +34,10 @@ function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms)
   if(appliance_ips) {
     if(Array.isArray(appliance_ips)) {
       appliance_ips.map(function(appliance_ip) {
-          var obj = {}; obj.host = appliance_ip; shouldFilters.push({ term: obj });
+          var obj = {}; obj.appliance_ip = appliance_ip; shouldFilters.push({ term: obj });
       });
     } else {
-      mustFilters.push({ term: { host: appliance_ips }});
+      mustFilters.push({ term: { appliance_ip: appliance_ips }});
     }
   }
 
@@ -107,6 +107,11 @@ function multiLineChart(splitField) {
       for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
         key = buckets.user.time.buckets[i].key_as_string;
 
+        if((buckets.idle.time.buckets[i].stat.value !== null) &&
+           (buckets.user.time.buckets[i].stat.value !== null) &&
+           (buckets.nice.time.buckets[i].stat.value !== null) &&
+           (buckets.system.time.buckets[i].stat.value !== null)) {
+
           idle = buckets.idle.time.buckets[i].stat.value;
 
           tempValue = buckets.user.time.buckets[i].stat.value +
@@ -114,6 +119,7 @@ function multiLineChart(splitField) {
                      buckets.system.time.buckets[i].stat.value;
 
           stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
+        }
       }
       return stats;
     }

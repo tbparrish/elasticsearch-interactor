@@ -25,10 +25,10 @@ function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms)
   if(appliance_ips) {
     if(Array.isArray(appliance_ips)) {
       appliance_ips.map(function(appliance_ip) {
-          var obj = {}; obj.host = appliance_ip; shouldFilters.push({ term: obj });
+          var obj = {}; obj.appliance_ip = appliance_ip; shouldFilters.push({ term: obj });
       });
     } else {
-      mustFilters.push({ term: { host: appliance_ips }});
+      mustFilters.push({ term: { appliance_ip: appliance_ips }});
     }
   }
 

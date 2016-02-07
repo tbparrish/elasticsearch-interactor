@@ -106,8 +106,9 @@ function multiLineChart() {
       totalMemory = buckets.used.time.buckets[i].stat.value +
                     buckets.free.time.buckets[i].stat.value;
 
-      stats.push({x: key, y: (usedMemory/totalMemory)*100});
-
+      if(usedMemory !== null && totalMemory !== null) {
+        stats.push({x: key, y: (usedMemory/totalMemory)*100});
+      }
     }
     return stats;
   }
