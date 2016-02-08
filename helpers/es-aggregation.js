@@ -1,17 +1,26 @@
-var videriCPU = require('./aggregators/videriCPU'),
-    blackLanternCPU = require('./aggregators/blackLanternCPU'),
-    memory = require('./aggregators/memory'),
-    responseTime = require('./aggregators/responseTime'),
-    interfaces = require('./aggregators/interfaces'),
-    ksi = require('./aggregators/ksi'),
+var moment = require('moment'),
+    _ = require('lazy.js'),
     hasLinesBuckets = require('./utils').hasLinesBuckets,
     hasTimeBuckets = require('./utils').hasTimeBuckets,
     hasXBuckets = require('./utils').hasXBuckets,
     hasSlicesBuckets = require('./utils').hasSlicesBuckets,
-    _ = require('lazy.js');
-
-var moment = require('moment');
-
+    memoryMetrics = require('./metrics/memory'),
+    swapMetrics = require('./metrics/swap'),
+    interfacesErrorsMetrics = require('./metrics/interfacesErrors'),
+    interfacesOctetsMetrics = require('./metrics/interfacesOctets'),
+    interfacesPacketsMetrics = require('./metrics/interfacesPackets'),
+    connectionsMetrics = require('./metrics/connections'),
+    connectionsMetrics = require('./metrics/connections'),
+    ksiErrorsMetrics = require('./metrics/ksiErrors'),
+    ksiWarningsMetrics = require('./metrics/ksiWarnings'),
+    responseTimeMetrics = require('./metrics/responseTime'),
+    signaturesMetrics = require('./metrics/signatures'),
+    errorMessageMetrics = require('./metrics/errorMessage'),
+    errorReasonMetrics = require('./metrics/errorMessage'),
+    videriCPUMetrics = require('./metrics/videriCPU'),
+    blackLanternCPUMetrics = require('./metrics/blackLanternCPU'),
+    responseTimeAverageMetrics = require('./metrics/responseTimeAverage');
+    
 function constructOptions(type, body) {
   return {
     index: 'overwatch-*',
@@ -241,51 +250,19 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
 }
 
 module.exports = {
-  ksiErrors: ksi.aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Errors",
-    { emergency: { term: { syslog_severity: "emergency" }},
-      alert: { term: { syslog_severity: "alert" }},
-      critical: {term: { syslog_severity: "critical"}},
-      error: {term: {syslog_severity: "error"}}}),
-      {type: "syslog"}),
-
-  ksiWarnings: ksi.aggregation("syslog", ksi.multiLineChart("appliance_ip", "KSI Service Warnings",
-    { warning: { term: { syslog_severity: "warning" }}}),
-    {type: "syslog"}),
-
-  responseTime: aggregation("syslog",
-    responseTime.multiLineChart("appliance_ip", {avg: { field: "response_time_ms"}})),
-
-  signatures: aggregation("syslog", lineChart({
-    max: {
-      field: "request_count"
-    }
-  })),
-
-  errorMessage: aggregation("syslog", pieChart("error_message")),
-  errorReason: aggregation("syslog", pieChart("error_reason")),
-
-  videriCPU: videriCPU.aggregation("collectd", videriCPU.multiLineChart("appliance_ip"), { plugin: "cpu" },
-    {user: {term: {type_instance: "user"}}, nice: {term: {type_instance: "nice"}},
-                  system: {term: {type_instance: "system"}}, idle: {term: {type_instance: "idle"}}}),
-  blackLanternCPU: blackLanternCPU.aggregation("syslog", blackLanternCPU.multiLineChart("appliance_ip"),
-                  {message_type: "BL_CPU_STAT"}),
-
-  memory: aggregation("collectd", memory.multiLineChart(), {plugin: "memory" },
-    {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
-  swap: aggregation("collectd", memory.multiLineChart(), {plugin: "swap" },
-      {used: {term: {type_instance: "used"}}, free: {term: {type_instance: "free"}}}),
-  interfacesOctets: aggregation("collectd", interfaces.multiLineChart("appliance_ip"), { plugin: "interface", collectd_type: "if_octets" },
-    {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
-  interfacesPackets: aggregation("collectd", interfaces.multiLineChart("appliance_ip"), { plugin: "interface", collectd_type: "if_packets" },
-    {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
-  interfacesErrors: aggregation("collectd", interfaces.multiLineChart("appliance_ip"), { plugin: "interface", collectd_type: "if_errors" },
-    {rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}}),
-
-  connections: aggregation("collectd", table("plugin_instance", "type_instance"), { plugin: "tcpconns" }),
-
-  responseTimeAverage: aggregation("syslog", sum({
-    avg: {
-      field: "response_time_ms"
-    }
-  }, 'ms'))
+  ksiErrors: ksiErrorsMetrics.aggregation(),
+  ksiWarnings: ksiWarningsMetrics.aggregation(),
+  responseTime: responseTimeMetrics.aggregation(),
+  signatures: signaturesMetrics.aggregation(),
+  errorMessage: errorMessageMetrics.aggregation(),
+  errorReason: errorReasonMetrics.aggregation(),
+  videriCPU: videriCPUMetrics.aggregation(),
+  blackLanternCPU: blackLanternCPUMetrics.aggregation(),
+  memory: memoryMetrics.aggregation(),
+  swap: swapMetrics.aggregation(),
+  interfacesOctets: interfacesOctetsMetrics.aggregation(),
+  interfacesPackets: interfacesPacketsMetrics.aggregation(),
+  interfacesErrors: interfacesErrorsMetrics.aggregation(),
+  connections: connectionsMetrics.aggregation(),
+  responseTimeAverage: responseTimeAverageMetrics.aggregation()
 };

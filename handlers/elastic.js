@@ -58,69 +58,47 @@ on('ElasticQuery', function (query) {
 });
 
 on('ElasticAggregation', function (params) {
+
+  function checkAppliances(appliances) {
+    var isVideri = false,
+        isBlackLantern = false,
+        appliance;
+
+    if(Array.isArray(appliances)) {
+      for(var i = 0; i < appliances.length; i++) {
+        appliance = JSON.parse(appliances[i]);
+        if(appliance.type === 'videri') {
+          isVideri = true;
+        } else if(appliance.type === 'blackLantern') {
+          isBlackLantern = true;
+        }
+      }
+    } else {
+      appliance = JSON.parse(appliances);
+      if(appliance.type === 'videri') {
+        isVideri = true;
+      } else if(appliance.type === 'blackLantern') {
+        isBlackLantern = true;
+      }
+    }
+
+    return { videri: isVideri,  blackLantern: isBlackLantern};
+  }
+
   var query = params.query, videriAggregation, videriPromise, videriTransform,
                             blackLanternAggregation, blackLanternPromise, blackLanternTransform;
 
   if(query !== 'cpu') {
     var aggregation = aggs[query](params);
     return es.search(aggregation.options).then(aggregation.transform);
-  } else if((query === 'cpu') && (params.appliances)) {
-      var videriAppliances = [];
-      var blackLanternAppliances = [];
-
-      if(Array.isArray(params.appliances)) {
-        for(var i = 0; i < params.appliances.length; i++) {
-          var appliance = JSON.parse(params.appliances[i]);
-          if(appliance.type === 'videri'){
-            videriAppliances.push(appliance.ip);
-          } else {
-            blackLanternAppliances.push(appliance.ip);
-          }
-        }
-      } else {
-        params.appliances = JSON.parse(params.appliances);
-
-        if(params.appliances.type === 'videri') {
-          videriAppliances.push(params.appliances.ip);
-        } else {
-          blackLanternAppliances.push(params.appliances.ip);
-        }
-      }
-
-      delete params.appliances;
-
-      if(videriAppliances.length > 0) {
-        params.appliance_ips = videriAppliances;
-        videriAggregation = aggs.videriCPU(params);
-        videriPromise = es.search(videriAggregation.options);
-      }
-
-      if(blackLanternAppliances.length > 0) {
-        params.appliance_ips = blackLanternAppliances;
-        blackLanternAggregation = aggs.blackLanternCPU(params);
-        blackLanternPromise = es.search(blackLanternAggregation.options);
-      }
-
-      if((videriAppliances.length > 0) && (blackLanternAppliances.length > 0)) {
-        return Promise.all([videriPromise, blackLanternPromise]).then(function(promises){
-          videriTransform = videriAggregation.transform(promises[0]);
-          blackLanternTransform = blackLanternAggregation.transform(promises[1]);
-          //TODO: there may be a better to concat an array of objects....
-          _(blackLanternTransform).each(function(result){
-            videriTransform.push(result);
-          });
-          return videriTransform;
-        });
-      } else if((videriAppliances.length > 0)) {
-        return videriPromise.then(videriAggregation.transform);
-      } else {
-        return blackLanternPromise.then(blackLanternAggregation.transform);
-      }
-    } else if((query === 'cpu') && (params.appliances === undefined)) {
+  } else {
+    if(params.appliances === undefined) {
       videriAggregation = aggs.videriCPU(params);
-      blackLanternAggregation = aggs.blackLanternCPU(params);
       videriPromise = es.search(videriAggregation.options);
+
+      blackLanternAggregation = aggs.blackLanternCPU(params);
       blackLanternPromise = es.search(blackLanternAggregation.options);
+
       return Promise.all([videriPromise, blackLanternPromise]).then(function(promises){
         videriTransform = videriAggregation.transform(promises[0]);
         blackLanternTransform = blackLanternAggregation.transform(promises[1]);
@@ -130,7 +108,33 @@ on('ElasticAggregation', function (params) {
         });
         return videriTransform;
       });
+    } else {
+      var applianceType = checkAppliances(params.appliances);
+      if((applianceType.videri === true) && (applianceType.blackLantern === true)){
+        videriAggregation = aggs.videriCPU(params);
+        videriPromise = es.search(videriAggregation.options);
+
+        blackLanternAggregation = aggs.blackLanternCPU(params);
+        blackLanternPromise = es.search(blackLanternAggregation.options);
+
+        return Promise.all([videriPromise, blackLanternPromise]).then(function(promises){
+          videriTransform = videriAggregation.transform(promises[0]);
+          blackLanternTransform = blackLanternAggregation.transform(promises[1]);
+          //TODO: there may be a better to concat an array of objects....
+          _(blackLanternTransform).each(function(result){
+            videriTransform.push(result);
+          });
+          return videriTransform;
+        });
+      } else if((applianceType.videri === true) && (applianceType.blackLantern === false)){
+        videriAggregation = aggs.videriCPU(params);
+        return es.search(videriAggregation.options).then(videriAggregation.transform);
+      } else if((applianceType.videri === false) && (applianceType.blackLantern === true)){
+        blackLanternAggregation = aggs.blackLanternCPU(params);
+        return es.search(blackLanternAggregation.options).then(blackLanternAggregation.transform);
+      }
     }
+  }
 });
 
 on('ElasticAddCommand', function(record){
