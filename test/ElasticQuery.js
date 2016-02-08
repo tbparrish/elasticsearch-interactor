@@ -7,29 +7,29 @@ var MicroService = require('persephone-ms');
 var ms = MicroService.forTest();
 
 describe("ElasticQuery", function() {
-    var client;
-    before(function() {
-      var template = {
-        name : 'template_overwatch',
-        body: {
-            "template" : mapping.template,
-            "settings" : mapping.settings,
-            "mappings" : mapping.mappings
-          }
-        };
+    // var client;
+    // before(function() {
+    //   var template = {
+    //     name : 'template_overwatch',
+    //     body: {
+    //         "template" : mapping.template,
+    //         "settings" : mapping.settings,
+    //         "mappings" : mapping.mappings
+    //       }
+    //     };
 
-        client = new elasticsearch.Client({
-          host: '10.0.2.2:9200',
-          log: 'info'
-        });
+    //     client = new elasticsearch.Client({
+    //       host: '10.0.2.2:9200',
+    //       log: 'info'
+    //     });
 
-        client.indices.putTemplate(template).then(function(response){
-          console.log('successfully created ElasticSearch Template');
-        });
+    //     client.indices.putTemplate(template).then(function(response){
+    //       console.log('successfully created ElasticSearch Template');
+    //     });
 
-    });
+    // });
 
-    it("query elasticsearch", function(done) {
+    xit("query elasticsearch", function(done) {
       client.index({
           index: 'overwatch-2016-01-20',
           type: 'syslog',
