@@ -136,7 +136,7 @@ function aggregation() {
     }
 
     var options = mq.constructOptions('syslog', {
-      query: mq.constructFilter(null, null, mustTerms, shouldTerms),
+      query: mq.constructFilter(fromIso, toIso, mustTerms, shouldTerms),
       aggregations: aggs.aggregation(fromIso, toIso, params.interval)
     });
 
