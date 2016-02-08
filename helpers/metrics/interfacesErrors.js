@@ -43,14 +43,14 @@ function multiLineChart(_aggs) {
           key_as_string = hosts[i].time.buckets[idx].key_as_string;
 
           if((hosts[i].time.buckets[idx].rx.value !== null) && (hosts[i].time.buckets[j].rx.value !== null)) {
-            if((hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value) > 0) {
+            if((hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value) >= 0) {
               rxValues.push({x: key_as_string,
                 y: (hosts[i].time.buckets[idx].rx.value - hosts[i].time.buckets[j].rx.value)});
             }
           }
 
           if((hosts[i].time.buckets[idx].tx.value !== null) && (hosts[i].time.buckets[j].tx.value !== null)) {
-            if((hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value) > 0) {
+            if((hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value) >= 0) {
               txValues.push({x: key_as_string,
                 y: (hosts[i].time.buckets[idx].tx.value - hosts[i].time.buckets[j].tx.value)});
             }
