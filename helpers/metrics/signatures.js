@@ -1,11 +1,14 @@
 
-var hasTimeBuckets = require("../utils").hasTimeBuckets,
+var hasHostsBuckets = require("../utils").hasHostsBuckets,
     mq = require("../metrics-query"),
     moment = require('moment');
 
 function lineChart(aggs) {
   function aggregation (from, to, interval) {
     return {
+       hosts: {
+        terms: { field: "appliance_ip" },
+         aggregations : {
        time: {
         date_histogram: {
           field: "@timestamp",
@@ -19,18 +22,26 @@ function lineChart(aggs) {
         aggregations: {
           yAxis: aggs
         }
+       }
       }
-    };
+    }
+  };
   }
 
   function transform(results) {
-    if(!hasTimeBuckets(results))
+    if(!hasHostsBuckets(results))
       return [];
-    return [{
-      values: results.aggregations.time.buckets.map(function (bucket) {
-        return { x: bucket.key_as_string, y: bucket.yAxis.value };
-      })
-    }];
+     return results.aggregations.hosts.buckets.map(function (host) {
+      return {
+        key: host.key,
+        values: host.time.buckets.map(function(bucket) {
+          return {
+            x: bucket.key_as_string,
+            y: bucket.yAxis.value
+          };
+        })
+      };
+    });
   }
 
   return { aggregation: aggregation, transform: transform };
