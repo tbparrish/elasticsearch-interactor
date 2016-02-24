@@ -19,8 +19,9 @@ var moment = require('moment'),
     errorReasonMetrics = require('./metrics/errorMessage'),
     videriCPUMetrics = require('./metrics/videriCPU'),
     blackLanternCPUMetrics = require('./metrics/blackLanternCPU'),
-    responseTimeAverageMetrics = require('./metrics/responseTimeAverage');
-    
+    responseTimeAverageMetrics = require('./metrics/responseTimeAverage'),
+    responseTimeLoadMetrics = require('./metrics/responseTimeLoad');
+
 function constructOptions(type, body) {
   return {
     index: 'overwatch-*',
@@ -264,5 +265,6 @@ module.exports = {
   interfacesPackets: interfacesPacketsMetrics.aggregation(),
   interfacesErrors: interfacesErrorsMetrics.aggregation(),
   connections: connectionsMetrics.aggregation(),
-  responseTimeAverage: responseTimeAverageMetrics.aggregation()
+  responseTimeAverage: responseTimeAverageMetrics.aggregation(),
+  responseTimeLoad: responseTimeLoadMetrics.aggregation()
 };
