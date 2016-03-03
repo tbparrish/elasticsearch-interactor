@@ -22,12 +22,11 @@ function WinstonLogger() {
 }
 
 var elasticConnectFromSettings = function(){
-  query('SystemPropertiesGet', {props: "settings"}).then(function(settings){
-    // TODO: This is silly, why arent we returning the actual object here.
-    settings = JSON.parse(settings.settings);
+  query('SystemPropertiesGet', {props: "deployment"}).then(function(response){
+    var deploymentSettings = JSON.parse(response.deployment);
 
-    var hostname = settings.deployment.elasticsearch.hostname;
-    var port = settings.deployment.elasticsearch.port;
+    var hostname = deploymentSettings.elasticsearch.hostname;
+    var port = deploymentSettings.elasticsearch.port;
 
     if (!hostname || !port) throw new Error('missing host/port for elasticsearch in settings');
 
