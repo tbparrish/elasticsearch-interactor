@@ -26,6 +26,6 @@
     "lazy.js": "^0.4.0",
     "moment": "^2.10.3",
     "moment-range": "^1.1.0",
-    "persephone-ms": "git@github.com:GuardTime/persephone-ms.git#a668bdec084bc6cef34c4c17eb238e04cef95fa8"
+    "persephone-ms": "git@github.com:GuardTime/persephone-ms.git#84ba6bbaae64c07afd6ad16b9906c2aa88d9d7e6"
   }
 }
