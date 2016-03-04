@@ -45,9 +45,10 @@ var esClient = function(esHost) {
   });
 };
 
+es =  esClient(config.elastic);
+
 on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
 on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
-elasticConnectFromSettings();
 
 on('ElasticQuery', function (query) {
   var searchOptions = constructOptions(query);
