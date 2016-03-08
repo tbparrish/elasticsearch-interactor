@@ -50,6 +50,7 @@ function multiLineChart(filters) {
     for(var i = 0; i < hostBuckets.length; i += 1) {
       var hostName = hostBuckets[i].key;
       values.push({
+        tooltipTitle: hostName,
         x: hostName,
         y: (hostBuckets[i].messages.buckets.allParentFailure.doc_count+
             hostBuckets[i].messages.buckets.ksiRequestRejected.doc_count+
@@ -59,7 +60,7 @@ function multiLineChart(filters) {
             hostBuckets[i].messages.buckets.extenderServiceDown.doc_count)
       });
     }
-    
+
     retVal.push({key: "Alerts", values: values});
 
     return retVal;

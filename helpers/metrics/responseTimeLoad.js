@@ -29,14 +29,28 @@ function multiLineChart() {
 
     var hosts = results.aggregations.hosts.buckets;
     for(var idx = 0; idx < hosts.length; idx +=1) {
-      if(hosts[idx].key && hosts[idx].response_time.min &&
-        hosts[idx].response_time.avg && hosts[idx].response_time.max) {
-      data[0].values.push(
-        {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.min});
-      data[1].values.push(
-        {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.avg});
-      data[2].values.push(
-        {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.max});
+      if(hosts[idx].response_time && hosts[idx].response_time.min) {
+        data[0].values.push(
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.min});
+      } else {
+        data[0].values.push(
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
+      }
+
+      if(hosts[idx].response_time && hosts[idx].response_time.avg) {
+        data[1].values.push(
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.avg});
+      } else {
+        data[1].values.push(
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
+      }
+
+      if(hosts[idx].response_time && hosts[idx].response_time.max) {
+        data[2].values.push(
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.max});
+      } else {
+        data[2].values.push(
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
       }
     }
 
