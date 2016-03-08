@@ -20,14 +20,33 @@ function multiLineChart() {
   function transform(results) {
     if(!hasHostsBuckets(results))
       return [];
-    return results.aggregations.hosts.buckets.map(function (host) {
-      return {key: host.key,
-        values:
-        { min: host.response_time.min,
-          avg: host.response_time.avg,
-          max: host.response_time.max}
-        };
-    });
+
+    var data = [];
+
+    data.push({key: "Minimum", values: []});
+    data.push({key: "Average", values: []});
+    data.push({key: "Maximum", values: []});
+
+    var hosts = results.aggregations.hosts.buckets;
+    for(var idx = 0; idx < hosts.length; idx +=1) {
+      if(hosts[idx].key && hosts[idx].response_time.min &&
+        hosts[idx].response_time.avg && hosts[idx].response_time.max) {
+      data[0].values.push(
+        {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.min});
+      data[1].values.push(
+        {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.avg});
+      data[2].values.push(
+        {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.max});
+      }
+    }
+
+    if( data[0].values.length === 0 &&
+        data[1].values.length === 0 &&
+        data[2].values.length === 0) {
+      return [];
+    }
+
+    return data;
   }
 
   return { aggregation: aggregation, transform: transform };
