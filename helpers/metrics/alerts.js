@@ -49,21 +49,69 @@ function multiLineChart(filters) {
 
     for(var i = 0; i < hostBuckets.length; i += 1) {
       var hostName = hostBuckets[i].key;
-      values.push({
-        tooltipTitle: hostName,
-        x: hostName,
-        y: (hostBuckets[i].messages.buckets.allParentFailure.doc_count+
-            hostBuckets[i].messages.buckets.ksiRequestRejected.doc_count+
-            hostBuckets[i].messages.buckets.ksiResponseRejected.doc_count+
-            hostBuckets[i].messages.buckets.ksiAuthAlert.doc_count+
-            hostBuckets[i].messages.buckets.udpMessageDrop.doc_count+
-            hostBuckets[i].messages.buckets.extenderServiceDown.doc_count)
-      });
+      var lastMessage = "";
+
+      if((hostBuckets[i].messages.buckets.allParentFailure.doc_count === 0) &&
+         (hostBuckets[i].messages.buckets.ksiRequestRejected.doc_count === 0) &&
+         (hostBuckets[i].messages.buckets.ksiResponseRejected.doc_count === 0) &&
+         (hostBuckets[i].messages.buckets.ksiAuthAlert.doc_count === 0) &&
+         (hostBuckets[i].messages.buckets.udpMessageDrop.doc_count === 0) &&
+         (hostBuckets[i].messages.buckets.extenderServiceDown.doc_count === 0)) {
+           values.push({
+             tooltipTitle: hostName,
+             x: hostName,
+             y: 0,
+             tooltipContent: "There are no Alerts"
+           });
+      } else {
+        var buckets;
+        if(hostBuckets[i].messages.buckets.allParentFailure.doc_count > 0) {
+          buckets = hostBuckets[i].messages.buckets.allParentFailure.time.buckets;
+        } else if(hostBuckets[i].messages.buckets.ksiRequestRejected.doc_count > 0) {
+          buckets = hostBuckets[i].messages.buckets.ksiRequestRejected.time.buckets;
+        } else if (hostBuckets[i].messages.buckets.ksiResponseRejected.doc_count > 0) {
+          buckets = hostBuckets[i].messages.buckets.ksiResponseRejected.time.buckets;
+        } else if(hostBuckets[i].messages.buckets.ksiAuthAlert.doc_count > 0) {
+          buckets = hostBuckets[i].messages.buckets.ksiAuthAlert.time.buckets;
+        } else if(hostBuckets[i].messages.buckets.udpMessageDrop.doc_count > 0) {
+          buckets = hostBuckets[i].messages.buckets.udpMessageDrop.time.buckets;
+        } else {
+          buckets = hostBuckets[i].messages.buckets.extenderServiceDown.time.buckets;
+        }
+        lastMessage = getLastMessage(buckets);
+        values.push({
+          tooltipTitle: hostName,
+          x: hostName,
+          y: (hostBuckets[i].messages.buckets.allParentFailure.doc_count+
+              hostBuckets[i].messages.buckets.ksiRequestRejected.doc_count+
+              hostBuckets[i].messages.buckets.ksiResponseRejected.doc_count+
+              hostBuckets[i].messages.buckets.ksiAuthAlert.doc_count+
+              hostBuckets[i].messages.buckets.udpMessageDrop.doc_count+
+              hostBuckets[i].messages.buckets.extenderServiceDown.doc_count),
+           tooltipContent: lastMessage
+        });
+      }
+    }
+
+    if(hostBuckets.length === 0) {
+      return [];
     }
 
     retVal.push({key: "Alerts", values: values});
 
     return retVal;
+  }
+
+  function getLastMessage(buckets) {
+    var message = "";
+    for(var i = buckets.length-1; i >= 0; i--) {
+      if(buckets[i].doc_count > 0) {
+        message = buckets[i].message.buckets[0].key;
+        return message;
+      }
+    }
+
+    return message;
   }
 
   return {
