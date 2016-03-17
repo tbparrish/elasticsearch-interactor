@@ -10,6 +10,7 @@
     "ci-test": "mocha --reporter mocha-tap-reporter > test.tap",
     "ci-lint": "jshint . --exclude-path=.gitignore --reporter=checkstyle > checkstyle-result.xml",
     "start": "node index.js",
+    "obfuscate": "./bin/obfuscate.sh",
     "test": "mocha test/",
     "build": "exit 0"
   },
@@ -19,7 +20,8 @@
     "jshint": "^2.8.0",
     "mocha": "^2.3.4",
     "mocha-tap-reporter": "^0.1.3",
-    "when": "^3.7.4"
+    "when": "^3.7.4",
+    "obfuscator": "^0.5.4"
   },
   "dependencies": {
     "elasticsearch": "^10.1.3",
