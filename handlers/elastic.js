@@ -53,7 +53,8 @@ on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
 on('ElasticQuery', function (query) {
   var searchOptions = constructOptions(query);
   return es.search(searchOptions).then(function (results) {
-    return results.hits.hits.map(function (hit) { return hit._source; });
+    var data = results.hits.hits.map(function (hit) { return hit._source; });
+    return {page: { totalItems: results.hits.total}, data: data};
   });
 });
 
