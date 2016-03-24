@@ -7,7 +7,7 @@ function multiLineChart() {
     return {
       hosts: {
         terms: {
-          field: "appliance_ip"
+          field: "appliance_hostname"
         },
         aggregations: {
           response_time: {
@@ -74,13 +74,13 @@ function aggregation() {
         toIso = moment(params.to).utc().toISOString(),
         mustTerms = {type: "syslog" }, shouldTerms = [];
 
-    if(params.appliance_ips) {
-      if(Array.isArray(params.appliance_ips)) {
-        params.appliance_ips.map(function(appliance_ip) {
-            shouldTerms.push({appliance_ip: appliance_ip});
+    if(params.appliance_hostnames) {
+      if(Array.isArray(params.appliance_hostnames)) {
+        params.appliance_hostnames.map(function(appliance_hostname) {
+            shouldTerms.push({appliance_hostname: appliance_hostname});
         });
       } else {
-        mustTerms.appliance_ip = params.appliance_ips;
+        mustTerms.appliance_hostname = params.appliance_hostnames;
       }
     }
 
