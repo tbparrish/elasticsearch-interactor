@@ -85,13 +85,13 @@ function aggregation() {
           for(var i = 0; i < params.appliances.length; i++) {
             appl  = JSON.parse(params.appliances[i]);
             if(appl.type === 'videri') {
-              shouldTerms.push({appliance_hostname: appl.appliance_hostname});
+              shouldTerms.push({appliance_hostname: appl.hostname});
             }
           }
         } else {
           appl = JSON.parse(params.appliances);
           if(appl.type === 'videri') {
-            mustTerms.appliance_hostname = appl.appliance_hostname;
+            mustTerms.appliance_hostname = appl.hostname;
           }
         }
       }
