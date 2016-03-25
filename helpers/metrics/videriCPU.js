@@ -7,7 +7,7 @@ function multiLineChart(filters) {
   function aggregation (from, to, interval) {
     return {
        hosts: {
-        terms: { field: "appliance_ip" },
+        terms: { field: "appliance_hostname" },
         aggregations : {
            stats: {
             filters: {
@@ -80,21 +80,21 @@ function aggregation() {
         shouldTerms = [],
         appl;
 
-    if(params.appliances) {
-      if(Array.isArray(params.appliances)) {
-        for(var i = 0; i < params.appliances.length; i++) {
-          appl  = JSON.parse(params.appliances[i]);
+      if(params.appliances) {
+        if(Array.isArray(params.appliances)) {
+          for(var i = 0; i < params.appliances.length; i++) {
+            appl  = JSON.parse(params.appliances[i]);
+            if(appl.type === 'videri') {
+              shouldTerms.push({appliance_hostname: appl.hostname});
+            }
+          }
+        } else {
+          appl = JSON.parse(params.appliances);
           if(appl.type === 'videri') {
-            shouldTerms.push({appliance_ip: appl.ip});
+            mustTerms.appliance_hostname = appl.hostname;
           }
         }
-      } else {
-        appl = JSON.parse(params.appliances);
-        if(appl.type === 'videri') {
-          mustTerms.appliance_ip = appl.ip;
-        }
       }
-    }
 
     var options = mq.constructOptions('collectd', {
       query: mq.constructFilter(fromIso, toIso, mustTerms, shouldTerms),

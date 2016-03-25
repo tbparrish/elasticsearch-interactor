@@ -7,7 +7,7 @@ function multiLineChart() {
   function aggregation (from, to, interval) {
     return {
        hosts: {
-        terms: { field: "appliance_ip" },
+        terms: { field: "appliance_hostname" },
         aggregations: {
           time: {
             date_histogram: {
@@ -51,21 +51,21 @@ function aggregation() {
         shouldTerms = [],
         appl;
 
-      if(params.appliances) {
-        if(Array.isArray(params.appliances)) {
-          for(var i = 0; i < params.appliances.length; i++) {
-            appl  = JSON.parse(params.appliances[i]);
-            if(appl.type === 'blackLantern') {
-              shouldTerms.push({appliance_ip: appl.ip});
-            }
-          }
-        } else {
-          appl = JSON.parse(params.appliances);
+    if(params.appliances) {
+      if(Array.isArray(params.appliances)) {
+        for(var i = 0; i < params.appliances.length; i++) {
+          appl  = JSON.parse(params.appliances[i]);
           if(appl.type === 'blackLantern') {
-            mustTerms.appliance_ip = appl.ip;
+            shouldTerms.push({appliance_hostname: appl.hostname});
           }
         }
+      } else {
+        appl = JSON.parse(params.appliances);
+        if(appl.type === 'blackLantern') {
+          mustTerms.appliance_hostname = appl.hostname;
+        }
       }
+    }
 
     var options = mq.constructOptions('syslog', {
       query: mq.constructFilter(fromIso, toIso, mustTerms, shouldTerms),

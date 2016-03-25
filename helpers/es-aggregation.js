@@ -33,7 +33,7 @@ function constructOptions(type, body) {
   };
 }
 
-function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms) {
+function constructFilter(fromIso, toIso, appliance_hostnames, extraTerms, shouldTerms) {
   var shouldFilters = [];
 
   var mustFilters = [{
@@ -52,13 +52,13 @@ function constructFilter(fromIso, toIso, appliance_ips, extraTerms, shouldTerms)
     });
   }
 
-  if(appliance_ips) {
-    if(Array.isArray(appliance_ips)) {
-      appliance_ips.map(function(appliance_ip) {
-          var obj = {}; obj.appliance_ip = appliance_ip; shouldFilters.push({ term: obj });
+  if(appliance_hostnames) {
+    if(Array.isArray(appliance_hostnames)) {
+      appliance_hostnames.map(function(appliance_hostname) {
+          var obj = {}; obj.appliance_hostname = appliance_hostname; shouldFilters.push({ term: obj });
       });
     } else {
-      mustFilters.push({ term: { appliance_ip: appliance_ips }});
+      mustFilters.push({ term: { appliance_hostname: appliance_hostnames }});
     }
   }
 
@@ -243,8 +243,8 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
         toIso = moment(params.to).utc().toISOString();
 
     var options = constructOptions(type, {
-      query: constructFilter(fromIso, toIso, params.appliance_ips, terms, shouldTerms),
-      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.appliance_ips)
+      query: constructFilter(fromIso, toIso, params.appliance_hostnames, terms, shouldTerms),
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.appliance_hostnames)
     });
 
     return { options: options, transform: aggs.transform };
