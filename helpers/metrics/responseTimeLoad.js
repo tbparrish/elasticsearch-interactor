@@ -10,8 +10,8 @@ function multiLineChart() {
           field: "appliance_hostname"
         },
         aggregations: {
-          response_time: {
-            stats : { field : "response_time_ms" } }
+          request_count: {
+            stats : { field : "request_count" } }
         }
       }
     };
@@ -29,25 +29,25 @@ function multiLineChart() {
 
     var hosts = results.aggregations.hosts.buckets;
     for(var idx = 0; idx < hosts.length; idx +=1) {
-      if(hosts[idx].response_time && hosts[idx].response_time.min) {
+      if(hosts[idx].request_count && hosts[idx].request_count.min) {
         data[0].values.push(
-          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.min});
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].request_count.min});
       } else {
         data[0].values.push(
           {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
       }
 
-      if(hosts[idx].response_time && hosts[idx].response_time.avg) {
+      if(hosts[idx].request_count && hosts[idx].request_count.avg) {
         data[1].values.push(
-          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.avg});
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].request_count.avg});
       } else {
         data[1].values.push(
           {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
       }
 
-      if(hosts[idx].response_time && hosts[idx].response_time.max) {
+      if(hosts[idx].request_count && hosts[idx].request_count.max) {
         data[2].values.push(
-          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].response_time.max});
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].request_count.max});
       } else {
         data[2].values.push(
           {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
