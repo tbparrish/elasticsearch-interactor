@@ -7,7 +7,12 @@ function multiLineChart(_aggs) {
   function aggregation (from, to, interval) {
     return {
        hosts: {
-        terms: { field: "appliance_hostname" },
+         terms: {
+           field: "appliance_hostname",
+           "order": {
+             "_term" : "asc"
+           }
+         },
         aggregations: {
           time: {
             date_histogram: {

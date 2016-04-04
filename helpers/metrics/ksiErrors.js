@@ -7,7 +7,10 @@ function multiLineChart(filters) {
     return {
       hosts: {
         terms: {
-          field: "appliance_hostname"
+          field: "appliance_hostname",
+          "order": {
+            "_term" : "asc"
+          }
         },
         aggregations: {
           messages: {
