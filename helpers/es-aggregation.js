@@ -20,7 +20,7 @@ var moment = require('moment'),
     videriCPUMetrics = require('./metrics/videriCPU'),
     blackLanternCPUMetrics = require('./metrics/blackLanternCPU'),
     responseTimeAverageMetrics = require('./metrics/responseTimeAverage'),
-    responseTimeLoadMetrics = require('./metrics/responseTimeLoad'),
+    signingLoadMetrics = require('./metrics/signingLoad'),
     alertsMetrics = require('./metrics/alerts');
 
 function constructOptions(type, body) {
@@ -267,6 +267,6 @@ module.exports = {
   interfacesErrors: interfacesErrorsMetrics.aggregation(),
   connections: connectionsMetrics.aggregation(),
   responseTimeAverage: responseTimeAverageMetrics.aggregation(),
-  responseTimeLoad: responseTimeLoadMetrics.aggregation(),
+  signingLoad: signingLoadMetrics.aggregation(),
   alerts: alertsMetrics.aggregation()
 };

@@ -31,7 +31,7 @@ function multiLineChart() {
     for(var idx = 0; idx < hosts.length; idx +=1) {
       if(hosts[idx].request_count && hosts[idx].request_count.min) {
         data[0].values.push(
-          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].request_count.min});
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: Math.floor(hosts[idx].request_count.min)});
       } else {
         data[0].values.push(
           {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
@@ -39,7 +39,7 @@ function multiLineChart() {
 
       if(hosts[idx].request_count && hosts[idx].request_count.avg) {
         data[1].values.push(
-          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].request_count.avg});
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: Math.floor(hosts[idx].request_count.avg)});
       } else {
         data[1].values.push(
           {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
@@ -47,7 +47,7 @@ function multiLineChart() {
 
       if(hosts[idx].request_count && hosts[idx].request_count.max) {
         data[2].values.push(
-          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: hosts[idx].request_count.max});
+          {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: Math.floor(hosts[idx].request_count.max)});
       } else {
         data[2].values.push(
           {x: hosts[idx].key,tooltipTitle: hosts[idx].key, y: 0});
