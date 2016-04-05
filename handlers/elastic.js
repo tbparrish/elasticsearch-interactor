@@ -1,8 +1,10 @@
 var elasticsearch = require('elasticsearch'),
     constructOptions = require('../helpers/es-options'),
-    aggs = require('../helpers/es-aggregation');
+    aggs = require('../helpers/es-aggregation'),
+    ErrorHandler = require('../helpers/es-errorHandler');
 
 var es;
+var errorHandler;
 
 function WinstonLogger() {
   this.error = log.error.bind(log);
@@ -46,6 +48,7 @@ var esClient = function(esHost) {
 };
 
 es =  esClient(config.elastic);
+errorHandler = new ErrorHandler(log);
 
 on('SystemPropertyUpdatedEvent', elasticConnectFromSettings);
 on('SystemPropertyCreatedEvent', elasticConnectFromSettings);
@@ -139,5 +142,9 @@ on('ElasticAggregation', function (params) {
 });
 
 on('ElasticAddCommand', function(record){
-  return es.create(record);
+  return es.create(record, function (error, response) {
+    if(error) {
+      errorHandler.addError(error);
+    }
+  });
 });
