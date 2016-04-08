@@ -2,5 +2,6 @@
   "elastic": "elasticsearch:9200",
   "rabbit": {
     "server": "rabbitmq"
-  }
+  },
+  "log":{"level":"debug"}
 }
