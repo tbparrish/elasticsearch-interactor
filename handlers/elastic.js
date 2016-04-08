@@ -146,5 +146,6 @@ on('ElasticAddCommand', function(record){
     if(error) {
       errorHandler.addError(error);
     }
+    return response;
   });
 });
