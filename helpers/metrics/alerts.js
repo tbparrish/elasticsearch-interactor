@@ -8,8 +8,9 @@ function multiLineChart(filters) {
       hosts: {
         terms: {
           field: "appliance_hostname",
-          "order": {
-            "_term" : "asc"
+          size: "0",
+          order: {
+            _term : "asc"
           }
         },
         aggregations: {

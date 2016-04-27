@@ -19,7 +19,7 @@ function sum(aggs, unit) {
 }
 
 function aggregation() {
-  var aggs = sum({avg: {field: "response_time_ms"}}, "ms");
+  var aggs = sum({avg: {field: "response_time_ms", size: "0"}}, "ms");
 
   return function(params) {
     var fromIso = moment(params.from).utc().toISOString(),

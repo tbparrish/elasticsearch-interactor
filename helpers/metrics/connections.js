@@ -6,7 +6,7 @@ function table(x, y) {
   function aggregation () {
     return {
       x: {
-        terms: { field: x },
+        terms: { field: x, size: "0" },
         aggregations: {
           y: {
             terms: { field: y },
