@@ -6,10 +6,21 @@ function table(x, y) {
   function aggregation () {
     return {
       x: {
-        terms: { field: x, size: "0" },
+        terms: {
+          field: x,
+          size: "0",
+          order: {
+            _term : "asc"
+          }
+        },
         aggregations: {
           y: {
-            terms: { field: y },
+            terms: {
+              field: y,
+              order: {
+                _term : "asc"
+              }
+             },
             aggregations: {
               sum: {
                 sum: {
