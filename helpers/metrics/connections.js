@@ -81,17 +81,10 @@ function table(x, y) {
 function aggregation() {
   var aggs = table("plugin_instance", "type_instance");
 
-
-
-  moment().subtract(1, 'seconds');
-  var fromIso = moment("2016-04-29T09:39:42-04:00").subtract(30, 'seconds').utc().toISOString();
-  var toIso = moment("2016-04-29T09:39:42-04:00").utc().toISOString();
-
-
   return function(params) {
     // go back the last 30 seconds.  Note: collectd sends messages every 10 seconds, therefore we should
     // have data available based on this window.
-    var fromIso = moment(params.to).subtract(30, 'seconds').utc().toISOString();
+    var fromIso = moment(params.to).subtract(30, 'seconds').utc().toISOString(),
         toIso = moment(params.to).utc().toISOString(),
         mustTerms = {type: "collectd", plugin: "tcpconns"}, shouldTerms = [];
     if(params.appliance_hostnames) {
