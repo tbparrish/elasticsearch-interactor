@@ -3,7 +3,7 @@ var hasXBuckets = require("../utils").hasXBuckets,
     moment = require('moment');
 
 function table(x, y) {
-  function aggregation () {
+  function aggregation (from, to, interval) {
     return {
       x: {
         terms: {
@@ -21,13 +21,26 @@ function table(x, y) {
                 _term : "asc"
               }
              },
-            aggregations: {
-              sum: {
-                sum: {
-                  field: "value"
-                }
-              }
-            }
+             aggregations: {
+               time: {
+                 date_histogram: {
+                   field: "@timestamp",
+                   interval: interval || "minute",
+                   min_doc_count: 0,
+                   extended_bounds: {
+                     min: from,
+                     max: to
+                   }
+                 },
+                 aggregations: {
+                   sum: {
+                     sum: {
+                       field: "value"
+                     }
+                   }
+                 }
+               }
+             }
           }
         }
       }
@@ -35,6 +48,14 @@ function table(x, y) {
   }
 
   function transform(results) {
+    function getLastValue(buckets) {
+      if(buckets.length === 0) {
+        return 0;
+      }
+
+      return buckets[buckets.length-1].sum.value;
+    }
+
     if(!hasXBuckets(results))
       return [];
     var keys = [ x ];
@@ -43,8 +64,11 @@ function table(x, y) {
       var row = {};
       row[x] = xBucket.key;
       xBucket.y.buckets.forEach(function (yBucket) {
-        if (!i) { keys.push(yBucket.key); }
-        row[yBucket.key] = yBucket.sum.value;
+        if (!i) {
+          keys.push(yBucket.key);
+        }
+        //row[yBucket.key] = yBucket.sum.value;
+        row[yBucket.key] = getLastValue(yBucket.time.buckets);
       });
       rows.push(row);
     });
@@ -75,7 +99,7 @@ function aggregation() {
 
     var options = mq.constructOptions('collectd', {
       query: mq.constructFilter(fromIso, toIso, mustTerms, shouldTerms),
-      aggregations: aggs.aggregation()
+      aggregations: aggs.aggregation(fromIso, toIso, params.interval)
     });
 
     return { options: options, transform: aggs.transform };
