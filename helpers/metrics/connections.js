@@ -25,8 +25,8 @@ function table(x, y) {
                time: {
                  date_histogram: {
                    field: "@timestamp",
-                   interval: interval || "minute",
-                   min_doc_count: 0,
+                   interval: interval || "second",
+                   min_doc_count: 1,
                    extended_bounds: {
                      min: from,
                      max: to
@@ -67,7 +67,6 @@ function table(x, y) {
         if (!i) {
           keys.push(yBucket.key);
         }
-        //row[yBucket.key] = yBucket.sum.value;
         row[yBucket.key] = getLastValue(yBucket.time.buckets);
       });
       rows.push(row);
@@ -83,10 +82,14 @@ function aggregation() {
   var aggs = table("plugin_instance", "type_instance");
 
   return function(params) {
-    var fromIso = moment(params.from).utc().toISOString(),
+    // go back the last 30 seconds.  Note: collectd sends messages every 10 seconds, therefore we should
+    // have data available based on this window.
+    var time = moment( "00:00:30" );
+    var date = moment(params.to);
+    date.subtract (time); 
+    var fromIso = date.subtract (time).utc().toISOString(),
         toIso = moment(params.to).utc().toISOString(),
         mustTerms = {type: "collectd", plugin: "tcpconns"}, shouldTerms = [];
-
     if(params.appliance_hostnames) {
       if(Array.isArray(params.appliance_hostnames)) {
         params.appliance_hostnames.map(function(appliance_hostname) {
