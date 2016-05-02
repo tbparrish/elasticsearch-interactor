@@ -61,7 +61,7 @@ function multiLineChart(filters) {
                     buckets.free.time.buckets[i].stat.value;
 
       if(usedMemory !== null && totalMemory !== null) {
-        stats.push({x: key, y: (usedMemory/totalMemory)*100});
+        stats.push({x: key, y: Math.floor((usedMemory/totalMemory)*100)});
       }
     }
     return stats;

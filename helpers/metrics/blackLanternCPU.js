@@ -39,7 +39,7 @@ function multiLineChart() {
       return [];
     return results.aggregations.hosts.buckets.map( function (host) {
       return { key: host.key, values: host.time.buckets.map(function(bucket){
-        return { x: bucket.key_as_string, y: bucket.stat.value };
+        return { x: bucket.key_as_string, y: Math.floor(bucket.stat.value) };
       })};
     });
   }
