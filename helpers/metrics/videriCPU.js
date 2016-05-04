@@ -67,7 +67,7 @@ function multiLineChart(filters) {
                      buckets.nice.time.buckets[i].stat.value +
                      buckets.system.time.buckets[i].stat.value;
 
-          stats.push({ x: key, y: ((tempValue)/(tempValue+idle))*100});
+          stats.push({ x: key, y: Math.floor((tempValue)/(tempValue+idle))*100});
         }
       }
       return stats;
