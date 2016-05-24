@@ -53,19 +53,23 @@ function multiLineChart(filters) {
   function transformCpuStats(buckets) {
     var key = "", i = 0, idle = 0, tempValue = 0, stats = [];
 
-      for (i = 0; i < buckets.user.time.buckets.length; i += 1) {
-        key = buckets.user.time.buckets[i].key_as_string;
+      for (i = 0; i < buckets.user.time.buckets.length-1; i += 1) {
+        key = buckets.user.time.buckets[i+1].key_as_string;
 
         if((buckets.idle.time.buckets[i].stat.value !== null) &&
            (buckets.user.time.buckets[i].stat.value !== null) &&
            (buckets.nice.time.buckets[i].stat.value !== null) &&
-           (buckets.system.time.buckets[i].stat.value !== null)) {
+           (buckets.system.time.buckets[i].stat.value !== null) &&
+           (buckets.idle.time.buckets[i+1].stat.value !== null) &&
+           (buckets.user.time.buckets[i+1].stat.value !== null) &&
+           (buckets.nice.time.buckets[i+1].stat.value !== null) &&
+           (buckets.system.time.buckets[i+1].stat.value !== null)) {
 
-          idle = buckets.idle.time.buckets[i].stat.value;
+          idle = (buckets.idle.time.buckets[i+1].stat.value - buckets.idle.time.buckets[i].stat.value);
 
-          tempValue = buckets.user.time.buckets[i].stat.value +
-                     buckets.nice.time.buckets[i].stat.value +
-                     buckets.system.time.buckets[i].stat.value;
+          tempValue = (buckets.user.time.buckets[i+1].stat.value   - buckets.user.time.buckets[i].stat.value) +
+                      (buckets.nice.time.buckets[i+1].stat.value   - buckets.nice.time.buckets[i].stat.value) +
+                      (buckets.system.time.buckets[i+1].stat.value - buckets.system.time.buckets[i].stat.value);
 
           stats.push({ x: key, y: Math.floor((tempValue)/(tempValue+idle))*100});
         }
