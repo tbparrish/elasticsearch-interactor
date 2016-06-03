@@ -235,6 +235,31 @@ function table(x, y) {
   return { aggregation: aggregation, transform: transform };
 }
 
+function field(term) {
+
+  function aggregation () {
+    return {
+      field:{
+         terms:{
+            field:term
+         }
+      }
+    };
+  }
+
+  function transform(results) {
+    if(results.aggregations.field.buckets.length === 0){
+      return [];
+    } else {
+      return results.aggregations.field.buckets.map(function(bucket){
+        return bucket.key;
+      });
+    }
+  }
+
+  return { aggregation: aggregation, transform: transform };
+}
+
 function aggregation(type, aggs, terms, filters, shouldTerms) {
 
   return function(params) {
@@ -245,6 +270,19 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
     var options = constructOptions(type, {
       query: constructFilter(fromIso, toIso, params.appliance_hostnames, terms, shouldTerms),
       aggregations: aggs.aggregation(fromIso, toIso, params.interval, filters, params.appliance_hostnames)
+    });
+
+    return { options: options, transform: aggs.transform };
+  };
+}
+
+
+function fieldAggregation(type, aggs) {
+
+  return function(params) {
+
+    var options = constructOptions(type, {
+      aggregations: aggs.aggregation()
     });
 
     return { options: options, transform: aggs.transform };
@@ -268,5 +306,6 @@ module.exports = {
   connections: connectionsMetrics.aggregation(),
   responseTimeAverage: responseTimeAverageMetrics.aggregation(),
   signingLoad: signingLoadMetrics.aggregation(),
-  alerts: alertsMetrics.aggregation()
+  alerts: alertsMetrics.aggregation(),
+  sourceDevice: fieldAggregation("syslog", field("source_device"))
 };
