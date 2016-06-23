@@ -280,8 +280,9 @@ function aggregation(type, aggs, terms, filters, shouldTerms) {
 function fieldAggregation(type, aggs) {
 
   return function(params) {
-
+    var mustNotFilter = {"term" : { "appliance_hostname" : "%{hostname}" }};
     var options = constructOptions(type, {
+      query: {filtered: { filter: { bool: {must_not: mustNotFilter}}}},
       aggregations: aggs.aggregation()
     });
 

@@ -11,7 +11,9 @@ function constructOptions(type, body) {
 }
 
 function constructFilter(fromIso, toIso, mustTerms, shouldTerms) {
-  var shouldFilters = [], mustFilters = [];
+  var shouldFilters = [];
+  var mustFilters = [];
+  var mustNotFilter = {"term" : { "appliance_hostname" : "%{hostname}" }};
 
   if((fromIso !== null) && (toIso !== null)) {
     mustFilters.push({
@@ -41,15 +43,15 @@ function constructFilter(fromIso, toIso, mustTerms, shouldTerms) {
 
   if((mustFilters.length > 0) && (shouldFilters.length > 0 )) {
     return {
-      filtered: { filter: { bool: { must: mustFilters, should: shouldFilters }}}
+      filtered: { filter: { bool: { must: mustFilters, should: shouldFilters, must_not: mustNotFilter}}}
     };
   } else if((mustFilters.length > 0) && (shouldFilters.length === 0 )){
     return {
-      filtered: { filter: { bool: { must: mustFilters }}}
+      filtered: { filter: { bool: { must: mustFilters, must_not: mustNotFilter}}}
     };
   } else if((mustFilters.length === 0) && (shouldFilters.length > 0 )){
     return {
-      filtered: { filter: { bool: { must: shouldFilters }}}
+      filtered: { filter: { bool: { must: shouldFilters, must_not: mustNotFilter}}}
     };
   }
 }
