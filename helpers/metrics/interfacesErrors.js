@@ -72,7 +72,7 @@ function multiLineChart(_aggs) {
 }
 
 function aggregation() {
-  var aggs = multiLineChart({rx: {avg: {field: "rx"}}, tx: {avg: {field: "tx"}}});
+  var aggs = multiLineChart({rx: {sum: {field: "rx"}}, tx: {sum: {field: "tx"}}});
 
   return function(params) {
     var fromIso = moment(params.from).utc().toISOString(),
