@@ -55,10 +55,11 @@ function multiLineChart(filters) {
     for (i = 0; i < buckets.used.time.buckets.length; i += 1) {
       key = buckets.used.time.buckets[i].key_as_string;
 
-      usedMemory = buckets.used.time.buckets[i].stat.value;
+      usedMemory = buckets.used.time.buckets[i].stat.value +
+                   buckets.buffered.time.buckets[i].stat.value +
+                   buckets.cache.time.buckets[i].stat.value;
 
-      totalMemory = buckets.used.time.buckets[i].stat.value +
-                    buckets.free.time.buckets[i].stat.value;
+      totalMemory = usedMemory + buckets.free.time.buckets[i].stat.value;
 
       if(usedMemory !== null && totalMemory !== null) {
         stats.push({x: key, y: Math.floor((usedMemory/totalMemory)*100)});
@@ -73,7 +74,9 @@ function multiLineChart(filters) {
 function aggregation() {
   var aggs = multiLineChart(
     {used: {term: {type_instance: "used"}},
-    free: {term: {type_instance: "free"}}});
+    free: {term: {type_instance: "free"}},
+    buffered: {term: {type_instance: "buffered"}},
+    cache: {term: {type_instance: "cache"}}});
 
   return function(params) {
     var fromIso = moment(params.from).utc().toISOString(),
