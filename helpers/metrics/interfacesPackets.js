@@ -4,7 +4,11 @@ var hasHostsBuckets = require("../utils").hasHostsBuckets,
     transformInterface = require("./transformInterface");
 
 function multiLineChart(_aggs) {
-  function aggregation (from, to, interval) {
+  var interval;
+
+  function aggregation (from, to, timeInterval) {
+    interval = timeInterval;
+
     return {
        hosts: {
          terms: {
@@ -36,14 +40,14 @@ function multiLineChart(_aggs) {
     if (!hasHostsBuckets(results)) {
       return [];
     } else {
-      return transformInterface.transform(results);
+      return transformInterface.transform(results, interval);
     }
   }
   return { aggregation: aggregation, transform: transform };
 }
 
 function aggregation() {
-  var aggs = multiLineChart({rx: {sum: {field: "rx"}}, tx: {sum: {field: "tx"}}});
+  var aggs = multiLineChart({rx: {max: {field: "rx"}}, tx: {max: {field: "tx"}}});
 
   return function(params) {
     var fromIso = moment(params.from).utc().toISOString(),
