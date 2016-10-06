@@ -37,16 +37,22 @@ function multiLineChart(_aggs) {
     if (!hasHostsBuckets(results))
       return [];
     return results.aggregations.hosts.buckets.map(function(host) {
-      return {
-        key: host.key,
-        values: host.time.buckets.map(function(bucket) {
-          return {
-            x: bucket.key_as_string,
-            y: bucket.stat.value
-          };
-        })
-      };
+      return { key: host.key, values: filterValidValues(host.time.buckets) };
     });
+  }
+
+  function filterValidValues(buckets) {
+    var values = [];
+
+    for (var i = 0; i < buckets.length; i += 1) {
+      var key = buckets[i].key_as_string;
+      var valueY = buckets[i].stat.value;
+
+      if( valueY !== null ) {
+        values.push({ x: key, y: valueY });
+      }
+    }
+    return values;
   }
 
   return {
