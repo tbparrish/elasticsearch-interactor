@@ -1,4 +1,3 @@
-
 var hasHostsBuckets = require("../utils").hasHostsBuckets,
     mq = require("../metrics-query"),
     moment = require('moment');
@@ -6,56 +5,64 @@ var hasHostsBuckets = require("../utils").hasHostsBuckets,
 function lineChart(aggs) {
   function aggregation (from, to, interval) {
     return {
-       hosts: {
-         terms: {
-           field: "appliance_hostname",
-           size: "0",
-           order: {
-             _term : "asc"
-           }
-         },
-         aggregations : {
-       time: {
-        date_histogram: {
-          field: "@timestamp",
-          interval: interval || "minute", // TODO rhodri, auto calculate,
-          min_doc_count: 0,
-          extended_bounds : {
-            min: from,
-            max: to
+      hosts: {
+        terms: {
+          field: "appliance_hostname",
+          size: "0",
+          order: {
+            _term : "asc"
           }
         },
-        aggregations: {
-          yAxis: aggs
+        aggregations : {
+          time: {
+            date_histogram: {
+              field: "@timestamp",
+              interval: interval || "minute", // TODO rhodri, auto calculate,
+              min_doc_count: 0,
+              extended_bounds : {
+                min: from,
+                max: to
+              }
+            },
+            aggregations: {
+              yAxis: aggs
+            }
+          }
         }
-       }
       }
-    }
-  };
+    };
   }
 
   function transform(results) {
     if(!hasHostsBuckets(results))
       return [];
-     return results.aggregations.hosts.buckets.map(function (host) {
+    return results.aggregations.hosts.buckets.map(function (host) {
       return {
         key: host.key,
-        values: host.time.buckets.map(function(bucket) {
-          return {
-            x: bucket.key_as_string,
-            y: bucket.yAxis.value
-          };
-        })
+        values: filterValidValues(host.time.buckets)
       };
     });
+  }
+
+  function filterValidValues(buckets) {
+    var values = [];
+
+    for (var i = 0; i < buckets.length; i += 1) {
+      var key = buckets[i].key_as_string;
+      var valueY = buckets[i].yAxis.value;
+
+      if( valueY !== null ) {
+        values.push({ x: key, y: valueY });
+      }
+    }
+    return values;
   }
 
   return { aggregation: aggregation, transform: transform };
 }
 
 function aggregation() {
-  var aggs = lineChart(
-    { max: { field: "request_count"}});
+  var aggs = lineChart({ max: { field: "request_count"} });
 
   return function(params) {
     var fromIso = moment(params.from).utc().toISOString(),
